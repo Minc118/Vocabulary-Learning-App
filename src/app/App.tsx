@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { Navigation } from './components/Navigation';
-import { TopBar } from './components/TopBar';
+import { BrowserRouter, Routes, Route } from 'react-router';
+import { MainLayout } from './MainLayout';
 import { Dashboard } from './screens/Dashboard';
 import { VocabularyList } from './screens/VocabularyList';
 import { AddWord } from './screens/AddWord';
@@ -16,76 +15,34 @@ import { CollectionsHub } from './screens/CollectionsHub';
 import { CollectionDetail } from './screens/CollectionDetail';
 import { Statistics } from './screens/Statistics';
 import { Settings } from './screens/Settings';
+import { AuthProvider } from './contexts/AuthContext';
+import { Login } from './screens/Login';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
-  const [pageData, setPageData] = useState<any>(null);
-  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
-
-  const handleNavigate = (page: string, data?: any) => {
-    setCurrentPage(page);
-    setPageData(data);
-  };
-
-  const handleToggleNav = () => {
-    setIsNavCollapsed(!isNavCollapsed);
-  };
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <Dashboard onNavigate={handleNavigate} />;
-      case 'vocabulary':
-        return <VocabularyList onNavigate={handleNavigate} />;
-      case 'add-word':
-        return <AddWord onNavigate={handleNavigate} />;
-      case 'word-detail':
-        return <WordDetail onNavigate={handleNavigate} data={pageData} />;
-      case 'import':
-        return <ImportHub onNavigate={handleNavigate} />;
-      case 'import-step1':
-        return <ImportStep1 onNavigate={handleNavigate} />;
-      case 'import-step2':
-        return <ImportStep2 onNavigate={handleNavigate} />;
-      case 'import-step3':
-        return <ImportStep3 onNavigate={handleNavigate} />;
-      case 'review':
-        return <ReviewHub onNavigate={handleNavigate} />;
-      case 'review-session':
-        return <ReviewSession onNavigate={handleNavigate} />;
-      case 'review-result':
-        return <ReviewResult onNavigate={handleNavigate} />;
-      case 'collections':
-        return <CollectionsHub onNavigate={handleNavigate} />;
-      case 'collection-detail':
-        return <CollectionDetail onNavigate={handleNavigate} data={pageData} />;
-      case 'statistics':
-        return <Statistics onNavigate={handleNavigate} />;
-      case 'settings':
-        return <Settings onNavigate={handleNavigate} />;
-      default:
-        return <Dashboard onNavigate={handleNavigate} />;
-    }
-  };
-
-  const isReviewSession = currentPage === 'review-session';
-
   return (
-    <div className="size-full bg-background">
-      {!isReviewSession && (
-        <>
-          <Navigation
-            currentPage={currentPage}
-            onNavigate={handleNavigate}
-            isCollapsed={isNavCollapsed}
-            onToggleCollapse={handleToggleNav}
-          />
-          <TopBar isNavCollapsed={isNavCollapsed} />
-        </>
-      )}
-      <main className={isReviewSession ? '' : `${isNavCollapsed ? 'ml-16' : 'ml-56'} mt-16 transition-all duration-300`}>
-        {renderPage()}
-      </main>
-    </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route element={<MainLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/vocabulary" element={<VocabularyList />} />
+          <Route path="/vocabulary/new" element={<AddWord />} />
+          <Route path="/vocabulary/:id" element={<WordDetail />} />
+          <Route path="/import" element={<ImportHub />} />
+          <Route path="/import/step1" element={<ImportStep1 />} />
+          <Route path="/import/step2" element={<ImportStep2 />} />
+          <Route path="/import/step3" element={<ImportStep3 />} />
+          <Route path="/review" element={<ReviewHub />} />
+          <Route path="/review/session" element={<ReviewSession />} />
+          <Route path="/review/result" element={<ReviewResult />} />
+          <Route path="/collections" element={<CollectionsHub />} />
+          <Route path="/collections/:id" element={<CollectionDetail />} />
+          <Route path="/statistics" element={<Statistics />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  </AuthProvider>
   );
 }

@@ -1,27 +1,63 @@
 import { TrendingUp, Calendar, Target, Clock } from 'lucide-react';
+import { useNavigate, useLocation } from "react-router";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from 'react';
+import { fetchStats } from '../../lib/api';
 
-interface StatisticsProps {
-  onNavigate: (page: string) => void;
-}
 
-export function Statistics({ onNavigate }: StatisticsProps) {
-  const weeklyData = [
-    { day: 'Mon', reviews: 24 },
-    { day: 'Tue', reviews: 32 },
-    { day: 'Wed', reviews: 18 },
-    { day: 'Thu', reviews: 28 },
-    { day: 'Fri', reviews: 35 },
-    { day: 'Sat', reviews: 22 },
-    { day: 'Sun', reviews: 26 },
-  ];
 
-  const progressData = [
-    { month: 'Jan', mastered: 45 },
-    { month: 'Feb', mastered: 78 },
-    { month: 'Mar', mastered: 103 },
-    { month: 'Apr', mastered: 127 },
-  ];
+export function Statistics() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const data = location.state;
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchStats()
+      .then(data => {
+        setStats(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch stats", err);
+        setError(err.message || 'Failed to load statistics');
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-8 flex justify-center items-center h-full">
+        <p className="text-muted-foreground">Loading statistics...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-destructive/10 text-destructive p-4 rounded-lg border border-destructive/20">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  const { 
+    total_words, 
+    mastered_words, 
+    added_this_week, 
+    due_for_review, 
+    study_hours, 
+    languages, 
+    weekly_activity, 
+    progress_data,
+    accuracy_rate
+  } = stats || {};
+
+  const masteryPercentage = total_words > 0 ? Math.round((mastered_words / total_words) * 100) : 0;
 
   return (
     <div className="p-8 space-y-6">
@@ -37,10 +73,10 @@ export function Statistics({ onNavigate }: StatisticsProps) {
             <Target className="w-4 h-4" strokeWidth={1.5} />
             <span className="text-[13px]">Total Words</span>
           </div>
-          <div className="text-[32px] font-medium mb-1">342</div>
+          <div className="text-[32px] font-medium mb-1">{total_words}</div>
           <div className="text-[13px] text-green-600 flex items-center gap-1">
             <TrendingUp className="w-3 h-3" strokeWidth={2} />
-            +12 this week
+            +{added_this_week} this week
           </div>
         </div>
 
@@ -49,17 +85,17 @@ export function Statistics({ onNavigate }: StatisticsProps) {
             <Target className="w-4 h-4" strokeWidth={1.5} />
             <span className="text-[13px]">Mastered</span>
           </div>
-          <div className="text-[32px] font-medium mb-1">127</div>
-          <div className="text-[13px] text-muted-foreground">37% of total</div>
+          <div className="text-[32px] font-medium mb-1">{mastered_words}</div>
+          <div className="text-[13px] text-muted-foreground">{masteryPercentage}% of total</div>
         </div>
 
         <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center gap-2 text-muted-foreground mb-3">
             <Calendar className="w-4 h-4" strokeWidth={1.5} />
-            <span className="text-[13px]">Current Streak</span>
+            <span className="text-[13px]">Due For Review</span>
           </div>
-          <div className="text-[32px] font-medium mb-1">12</div>
-          <div className="text-[13px] text-muted-foreground">days in a row</div>
+          <div className="text-[32px] font-medium mb-1">{due_for_review}</div>
+          <div className="text-[13px] text-muted-foreground">words waiting</div>
         </div>
 
         <div className="bg-card border border-border rounded-lg p-6">
@@ -67,8 +103,8 @@ export function Statistics({ onNavigate }: StatisticsProps) {
             <Clock className="w-4 h-4" strokeWidth={1.5} />
             <span className="text-[13px]">Total Study Time</span>
           </div>
-          <div className="text-[32px] font-medium mb-1">24.5h</div>
-          <div className="text-[13px] text-muted-foreground">this month</div>
+          <div className="text-[32px] font-medium mb-1">{study_hours}h</div>
+          <div className="text-[13px] text-muted-foreground">estimated</div>
         </div>
       </div>
 
@@ -76,7 +112,7 @@ export function Statistics({ onNavigate }: StatisticsProps) {
       <div className="bg-card border border-border rounded-lg p-6">
         <h2 className="font-medium text-[17px] mb-6">Weekly Review Activity</h2>
         <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={weeklyData}>
+          <BarChart data={weekly_activity || []}>
             <XAxis dataKey="day" stroke="#a3a3a3" fontSize={12} tickLine={false} axisLine={false} />
             <YAxis stroke="#a3a3a3" fontSize={12} tickLine={false} axisLine={false} />
             <Tooltip
@@ -96,7 +132,7 @@ export function Statistics({ onNavigate }: StatisticsProps) {
       <div className="bg-card border border-border rounded-lg p-6">
         <h2 className="font-medium text-[17px] mb-6">Mastered Words Progress</h2>
         <ResponsiveContainer width="100%" height={240}>
-          <LineChart data={progressData}>
+          <LineChart data={progress_data || []}>
             <XAxis dataKey="month" stroke="#a3a3a3" fontSize={12} tickLine={false} axisLine={false} />
             <YAxis stroke="#a3a3a3" fontSize={12} tickLine={false} axisLine={false} />
             <Tooltip
@@ -117,33 +153,25 @@ export function Statistics({ onNavigate }: StatisticsProps) {
         <div className="bg-card border border-border rounded-lg p-6">
           <h2 className="font-medium text-[17px] mb-4">By Language</h2>
           <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[14px]">German</span>
-                <span className="text-[14px] font-medium">187 words</span>
-              </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: '55%' }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[14px]">English</span>
-                <span className="text-[14px] font-medium">128 words</span>
-              </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500" style={{ width: '37%' }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[14px]">French</span>
-                <span className="text-[14px] font-medium">27 words</span>
-              </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-purple-500" style={{ width: '8%' }}></div>
-              </div>
-            </div>
+            {(!languages || languages.length === 0) ? (
+              <div className="text-muted-foreground text-[13px]">No languages recorded.</div>
+            ) : (
+              languages.slice(0, 3).map((lang: any, index: number) => {
+                const colors = ['bg-primary', 'bg-blue-500', 'bg-purple-500'];
+                const percent = total_words > 0 ? Math.round((lang.count / total_words) * 100) : 0;
+                return (
+                  <div key={lang.name}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[14px]">{lang.name}</span>
+                      <span className="text-[14px] font-medium">{lang.count} words</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className={`h-full ${colors[index % colors.length]}`} style={{ width: `${percent}%` }}></div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 

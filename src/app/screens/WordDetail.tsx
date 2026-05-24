@@ -1,60 +1,48 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Edit2, Trash2, Tag, FolderOpen, Clock, TrendingUp } from 'lucide-react';
-import { fetchWordById, type VocabularyWord } from '../../lib/api';
+import { useNavigate, useLocation } from "react-router";
+import { ArrowLeft, Edit2, Trash2, Tag, FolderOpen, Clock, TrendingUp, Loader2, Volume2 } from 'lucide-react';
+import { fetchWordById, updateWord, deleteWord, type VocabularyWord } from '../../lib/api';
+import { speakWord } from '../../lib/speech';
 
 interface WordDetailProps {
-  onNavigate: (page: string) => void;
   data?: Partial<VocabularyWord>;
 }
 
-export function WordDetail({ onNavigate, data }: WordDetailProps) {
-  // initialWord 的作用是提供一个“兜底结构”。
-  // 为什么需要它：
-  // 1. 避免页面在请求返回前出现大量 undefined
-  // 2. 保证 TypeScript 知道 word 始终是完整对象
-  // 3. 保留项目原本的原型展示能力
+export function WordDetail() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const data = location.state;
+  
   const initialWord: VocabularyWord = {
-    id: data?.id ?? 0,
-    word: 'Verantwortung',
-    translation: 'responsibility',
+    id: data?.id ?? '',
+    word: '...',
+    translation: '...',
     pos: 'noun',
-    language: 'German',
-    tags: ['Business', 'Ethics', 'Advanced'],
+    language: 'English',
+    tags: [],
     nextReview: 'Today',
     mastery: 'Learning',
-    definition:
-      'The state or fact of having a duty to deal with something or of having control over someone. A moral obligation to behave correctly toward or in respect of something.',
-    examples: [
-      'Er trägt die volle Verantwortung für das Projekt.',
-      'Die Verantwortung liegt bei der Geschäftsführung.',
-      'Jeder muss Verantwortung für sein Handeln übernehmen.',
-    ],
-    collocations: [
-      'große Verantwortung',
-      'volle Verantwortung',
-      'Verantwortung übernehmen',
-      'Verantwortung tragen',
-      'soziale Verantwortung',
-    ],
-    synonyms: ['Zuständigkeit', 'Pflicht', 'Aufgabe'],
-    relatedWords: ['verantwortlich', 'verantworten'],
-    collection: 'Business German',
-    source: 'Article import',
-    addedAt: '2 days ago',
-    reviewCount: 5,
+    definition: '',
+    examples: [],
+    collocations: [],
+    synonyms: [],
+    relatedWords: [],
+    collection: '',
+    source: '',
+    addedAt: '',
+    reviewCount: 0,
   };
 
-  // 这里的状态设计体现了详情页常见的三件事：
-  // 1. 当前展示的数据
-  // 2. 是否正在加载
-  // 3. 是否请求失败
   const [word, setWord] = useState<VocabularyWord>({ ...initialWord, ...data });
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(Boolean(data?.id));
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<VocabularyWord>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // 如果没有 id，说明当前页面拿到的只是临时数据，
-    // 那就直接用传进来的 data 展示，不再请求后端。
     if (!data?.id) {
       setWord((current) => ({ ...current, ...data }));
       setIsLoading(false);
@@ -65,14 +53,22 @@ export function WordDetail({ onNavigate, data }: WordDetailProps) {
 
     const loadWord = async () => {
       try {
-        // 如果有 id，就优先用 id 去后端拿“完整详情”。
-        // 这比只依赖上一页传来的对象更可靠，因为详情页需要的字段更多。
         const result = await fetchWordById(data.id);
         if (!isMounted) return;
-        setWord(result);
+        
+        // Ensure defaults for arrays to prevent mapping errors
+        const safeResult = {
+          ...result,
+          tags: Array.isArray(result.tags) ? result.tags : [],
+          examples: Array.isArray(result.examples) ? result.examples : [],
+          collocations: Array.isArray(result.collocations) ? result.collocations : [],
+          synonyms: Array.isArray(result.synonyms) ? result.synonyms : [],
+          relatedWords: Array.isArray(result.relatedWords) ? result.relatedWords : [],
+        };
+        
+        setWord(safeResult);
         setLoadError(null);
       } catch (error) {
-        // 请求失败时，不直接让页面白屏，而是给出错误提示。
         if (!isMounted) return;
         setLoadError(error instanceof Error ? error.message : 'Failed to load word details');
       } finally {
@@ -89,11 +85,53 @@ export function WordDetail({ onNavigate, data }: WordDetailProps) {
     };
   }, [data]);
 
+  const handleDelete = async () => {
+    if (!word.id) return;
+    if (!confirm('Are you sure you want to delete this word?')) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteWord(word.id);
+      navigate('/vocabulary');
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to delete word');
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEditClick = () => {
+    setEditForm({
+      word: word.word,
+      translation: word.translation,
+      pos: word.pos,
+      language: word.language,
+      definition: word.definition
+    });
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!word.id) return;
+    setIsSaving(true);
+    setLoadError(null);
+    try {
+      const updated = await updateWord(word.id, editForm);
+      // Backend returns full word including relation IDs, but we might need to map it properly or just fetch again.
+      // Easiest is to update the simple fields locally and re-fetch to be safe.
+      setWord(prev => ({ ...prev, ...editForm }));
+      setIsEditing(false);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to update word');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="p-8">
       <div className="max-w-6xl mx-auto">
         <button
-          onClick={() => onNavigate('vocabulary')}
+          onClick={() => navigate('/vocabulary')}
           className="flex items-center gap-2 text-[14px] text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
@@ -114,105 +152,192 @@ export function WordDetail({ onNavigate, data }: WordDetailProps) {
 
         <div className="grid grid-cols-3 gap-6">
           {/* Main Content */}
-          {/* 左侧是这个词的主要语义信息。 */}
           <div className="col-span-2 space-y-6">
             <div className="bg-card border border-border rounded-lg p-8">
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <div className="text-[36px] font-medium mb-2">{word.word}</div>
-                  <div className="text-[16px] text-muted-foreground">{word.translation}</div>
-                  <div className="mt-3 flex items-center gap-3">
-                    <span className="px-3 py-1 bg-muted rounded-lg text-[13px]">{word.pos}</span>
-                    <span className="px-3 py-1 bg-muted rounded-lg text-[13px]">{word.language}</span>
-                  </div>
+                  {isEditing ? (
+                    <div className="space-y-3 mb-2">
+                      <input 
+                        value={editForm.word || ''}
+                        onChange={e => setEditForm({ ...editForm, word: e.target.value })}
+                        className="text-[30px] font-medium w-full bg-input-background border border-border rounded px-2 focus:outline-none"
+                        placeholder="Word"
+                      />
+                      <div className="flex gap-2">
+                        <input 
+                          value={editForm.pos || ''}
+                          onChange={e => setEditForm({ ...editForm, pos: e.target.value })}
+                          className="px-2 py-1 bg-input-background border border-border rounded text-[13px] w-24 focus:outline-none"
+                          placeholder="Part of speech"
+                        />
+                        <input 
+                          value={editForm.language || ''}
+                          onChange={e => setEditForm({ ...editForm, language: e.target.value })}
+                          className="px-2 py-1 bg-input-background border border-border rounded text-[13px] w-24 focus:outline-none"
+                          placeholder="Language"
+                        />
+                      </div>
+                      <input 
+                        value={editForm.translation || ''}
+                        onChange={e => setEditForm({ ...editForm, translation: e.target.value })}
+                        className="text-[16px] text-muted-foreground w-full bg-input-background border border-border rounded px-2 focus:outline-none"
+                        placeholder="Translation"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2.5 mb-2">
+                        <div className="text-[36px] font-medium">{word.word}</div>
+                        <button
+                          onClick={() => speakWord(word.word, word.language)}
+                          className="w-9 h-9 inline-flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors translate-y-[3.5px]"
+                          title="Pronounce"
+                        >
+                          <Volume2 className="w-5.5 h-5.5" strokeWidth={1.5} />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="px-3 py-1 bg-muted rounded-lg text-[13px] font-medium text-muted-foreground">{word.pos || 'Unknown'}</span>
+                        <span className="px-3 py-1 bg-muted rounded-lg text-[13px] text-muted-foreground">{word.language}</span>
+                      </div>
+                      <div className="text-[18px] font-medium text-foreground mt-1">{word.translation}</div>
+                    </>
+                  )}
                 </div>
                 <div className="flex gap-2">
-                  <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent transition-colors">
-                    <Edit2 className="w-4 h-4" strokeWidth={1.5} />
-                  </button>
-                  <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-destructive hover:text-destructive-foreground transition-colors">
-                    <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-                  </button>
+                  {isEditing ? (
+                    <>
+                      <button 
+                        onClick={() => setIsEditing(false)}
+                        className="px-3 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent transition-colors text-[13px]"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={handleSaveEdit}
+                        disabled={isSaving}
+                        className="px-3 h-9 flex items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-[13px] disabled:opacity-50"
+                      >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={handleEditClick} className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent transition-colors">
+                      <Edit2 className="w-4 h-4" strokeWidth={1.5} />
+                    </button>
+                  )}
+                  {!isEditing && (
+                    <button 
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50"
+                    >
+                      {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" strokeWidth={1.5} />}
+                    </button>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div>
-                  <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                    Definition
+                {isEditing ? (
+                  <div>
+                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                      Definition
+                    </div>
+                    <textarea 
+                      value={editForm.definition || ''}
+                      onChange={e => setEditForm({ ...editForm, definition: e.target.value })}
+                      className="w-full bg-input-background border border-border rounded-lg p-3 text-[14px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring/20 min-h-[100px]"
+                    />
                   </div>
-                  <div className="text-[15px] leading-relaxed">{word.definition}</div>
-                </div>
+                ) : word.definition && (
+                  <div>
+                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                      Definition
+                    </div>
+                    <div className="text-[15px] leading-relaxed">{word.definition}</div>
+                  </div>
+                )}
 
-                <div>
-                  <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                    Example Sentences
+                {word.examples.length > 0 && (
+                  <div>
+                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                      Example Sentences
+                    </div>
+                    <div className="space-y-3">
+                      {word.examples.map((example, index) => (
+                        <div key={index} className="pl-4 border-l-2 border-primary/30">
+                          <div className="text-[15px] leading-relaxed">{example.sentence}</div>
+                          {example.translation && (
+                            <div className="text-[14px] text-muted-foreground mt-1">{example.translation}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-3">
-                    {word.examples.map((example, index) => (
-                      <div key={index} className="pl-4 border-l-2 border-primary/30 text-[15px] leading-relaxed">
-                        {example}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                )}
 
-                <div>
-                  <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                    Common Collocations
+                {word.collocations.length > 0 && (
+                  <div>
+                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                      Common Collocations
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {word.collocations.map((item, i) => (
+                        <span key={i} className="px-3 py-2 bg-muted rounded-lg text-[14px]">
+                          {item}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {word.collocations.map((item, i) => (
-                      <span key={i} className="px-3 py-2 bg-muted rounded-lg text-[14px]">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                      Synonyms
+                  {word.synonyms.length > 0 && (
+                    <div>
+                      <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                        Synonyms
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {word.synonyms.map((item, i) => (
+                          <span key={i} className="px-3 py-2 bg-muted rounded-lg text-[14px]">
+                            {item}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {word.synonyms.map((item, i) => (
-                        <span key={i} className="px-3 py-2 bg-muted rounded-lg text-[14px]">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                      Related Words
+                  {word.relatedWords.length > 0 && (
+                    <div>
+                      <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
+                        Related Words
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {word.relatedWords.map((item, i) => (
+                          <span key={i} className="px-3 py-2 bg-muted rounded-lg text-[14px]">
+                            {item}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {word.relatedWords.map((item, i) => (
-                        <span key={i} className="px-3 py-2 bg-muted rounded-lg text-[14px]">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Sidebar */}
-          {/* 右侧是补充信息：学习状态、组织信息、来源信息。 */}
           <div className="space-y-6">
             <div className="bg-card border border-border rounded-lg p-5">
               <h3 className="font-medium text-[15px] mb-4">Learning Status</h3>
               <div className="space-y-4">
                 <div>
                   <div className="text-[13px] text-muted-foreground mb-1">Mastery Level</div>
-                  <div className="text-[15px] font-medium">{word.mastery}</div>
+                  <div className="text-[15px] font-medium">{word.mastery || 'Learning'}</div>
                   <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      // 用不同颜色和宽度表达掌握程度，是一种很常见的视觉编码方式。
                       className={`h-full ${
                         word.mastery === 'Mastered'
                           ? 'bg-green-500 w-full'
@@ -228,7 +353,7 @@ export function WordDetail({ onNavigate, data }: WordDetailProps) {
                   <Clock className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
                   <div>
                     <div className="text-[13px] text-muted-foreground">Next Review</div>
-                    <div className="text-[14px] font-medium">{word.nextReview}</div>
+                    <div className="text-[14px] font-medium">{word.nextReview || 'Not scheduled'}</div>
                   </div>
                 </div>
 
@@ -236,7 +361,7 @@ export function WordDetail({ onNavigate, data }: WordDetailProps) {
                   <TrendingUp className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
                   <div>
                     <div className="text-[13px] text-muted-foreground">Review Count</div>
-                    <div className="text-[14px] font-medium">{word.reviewCount} times</div>
+                    <div className="text-[14px] font-medium">{word.reviewCount || 0} times</div>
                   </div>
                 </div>
               </div>
@@ -245,37 +370,41 @@ export function WordDetail({ onNavigate, data }: WordDetailProps) {
             <div className="bg-card border border-border rounded-lg p-5">
               <h3 className="font-medium text-[15px] mb-4">Organization</h3>
               <div className="space-y-4">
-                <div>
-                  <div className="flex items-center gap-2 text-[13px] text-muted-foreground mb-2">
-                    <FolderOpen className="w-3.5 h-3.5" strokeWidth={1.5} />
-                    Collections
+                {word.collection && (
+                  <div>
+                    <div className="flex items-center gap-2 text-[13px] text-muted-foreground mb-2">
+                      <FolderOpen className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      Collections
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="px-3 py-2 bg-muted rounded-lg text-[13px]">{word.collection}</div>
+                    </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <div className="px-3 py-2 bg-muted rounded-lg text-[13px]">{word.collection}</div>
-                  </div>
-                </div>
+                )}
 
-                <div>
-                  <div className="flex items-center gap-2 text-[13px] text-muted-foreground mb-2">
-                    <Tag className="w-3.5 h-3.5" strokeWidth={1.5} />
-                    Tags
+                {word.tags.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 text-[13px] text-muted-foreground mb-2">
+                      <Tag className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      Tags
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(word.tags || []).map((tag, i) => (
+                        <span key={i} className="px-2.5 py-1 bg-primary/10 text-primary rounded text-[12px] font-medium">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {word.tags.map((tag, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-primary/10 text-primary rounded text-[12px] font-medium">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
             <div className="bg-card border border-border rounded-lg p-5">
               <h3 className="font-medium text-[15px] mb-4">Source</h3>
               <div className="text-[13px] text-muted-foreground mb-1">Added from</div>
-              <div className="text-[14px]">{word.source}</div>
-              <div className="text-[13px] text-muted-foreground mt-3">{word.addedAt}</div>
+              <div className="text-[14px]">{word.source || 'Manual input'}</div>
+              {word.addedAt && <div className="text-[13px] text-muted-foreground mt-3">{word.addedAt}</div>}
             </div>
           </div>
         </div>

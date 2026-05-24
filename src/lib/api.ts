@@ -1,58 +1,45 @@
- // 这个类型定义了“前端期待从后端拿到什么样的数据结构”。
-// 它的作用非常重要：
-// 1. 让页面开发时有明确的数据契约
-// 2. 如果后端字段变了，TypeScript 能及时提醒
-// 3. 帮你建立“前后端接口要对齐”的意识
-export interface VocabularyWord {
-  id: number;
-  word: string;
-  translation: string;
-  pos: string;
-  language: string;
-  tags: string[];
-  nextReview: string;
-  mastery: 'Learning' | 'Familiar' | 'Mastered';
-  definition: string;
-  examples: string[];
-  collocations: string[];
-  synonyms: string[];
-  relatedWords: string[];
-  collection: string;
-  source: string;
-  addedAt: string;
-  reviewCount: number;
-}
+export type { VocabularyWord } from './types';
+import type { VocabularyWord } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5001';
+import { supabase } from './supabase';
 
 function buildApiUrl(path: string) {
-  // 把基础地址和具体路径拼起来。
-  // 这样做的好处是：后续如果后端地址改变，只需要改环境变量，不需要全项目替换。
   return `${API_BASE_URL.replace(/\/$/, '')}${path}`;
 }
 
-async function parseJsonResponse<T>(path: string): Promise<T> {
-  // 这是一个“底层通用请求函数”。
-  // 当前项目里所有请求都会先走这里，这样错误处理逻辑可以统一。
-  const response = await fetch(buildApiUrl(path));
+async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string> || {}),
+  };
+
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+  }
+
+  const response = await fetch(buildApiUrl(path), {
+    ...options,
+    headers,
+  });
 
   if (!response.ok) {
-    // 如果 HTTP 状态码不是 2xx，直接抛错。
-    // 这样页面层就能统一进入 error 分支，而不是误以为请求成功。
-    throw new Error(`Backend request failed with ${response.status}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Backend request failed with ${response.status}`);
   }
 
   return response.json() as Promise<T>;
 }
 
 export async function checkBackendConnection(): Promise<{ ok: boolean; message: string }> {
-  // 这个函数专门用来做“连接测试”。
-  // 它不拿业务数据，只测试后端 health endpoint 是否可用。
   try {
-    const result = await parseJsonResponse<{ ok: boolean; service: string; items: number }>('/api/health');
+    const result = await fetchApi<{ ok: boolean; service: string }>('/api/health');
     return {
       ok: result.ok,
-      message: `${result.service} ready · ${result.items} fixed words available`,
+      message: `${result.service} ready`,
     };
   } catch (error) {
     return {
@@ -62,13 +49,141 @@ export async function checkBackendConnection(): Promise<{ ok: boolean; message: 
   }
 }
 
-export async function fetchWords(): Promise<VocabularyWord[]> {
-  // 获取词汇列表，对应词汇总览页。
-  const result = await parseJsonResponse<{ items: VocabularyWord[]; count: number }>('/api/words');
+// ================= AI Features =================
+
+export async function enrichWord(word: string, language: string = 'English'): Promise<Partial<VocabularyWord>> {
+  const nativeLanguage = localStorage.getItem('nativeLanguage') || 'Chinese';
+  return fetchApi<Partial<VocabularyWord>>('/api/ai/enrich', {
+    method: 'POST',
+    body: JSON.stringify({ word, language, native_language: nativeLanguage }),
+  });
+}
+
+export async function bulkEnrichWords(words: any[], language: string = 'English'): Promise<Partial<VocabularyWord>[]> {
+  const nativeLanguage = localStorage.getItem('nativeLanguage') || 'Chinese';
+  return fetchApi<Partial<VocabularyWord>[]>('/api/ai/enrich-batch', {
+    method: 'POST',
+    body: JSON.stringify({ words, language, native_language: nativeLanguage }),
+  });
+}
+
+export async function analyzeText(text: string, language: string = 'English', level: string = 'Intermediate', goal: string = 'General', count: number = 10): Promise<any[]> {
+  const nativeLanguage = localStorage.getItem('nativeLanguage') || 'Chinese';
+  const res = await fetchApi<{ candidates: any[] }>('/api/import/analyze', {
+    method: 'POST',
+    body: JSON.stringify({ text, language, level, goal, count, native_language: nativeLanguage }),
+  });
+  return res.candidates;
+}
+
+export async function extractTextFromFile(fileData: string, mimeType: string): Promise<string> {
+  const res = await fetchApi<{ text: string }>('/api/import/extract-text', {
+    method: 'POST',
+    body: JSON.stringify({ fileData, mimeType }),
+  });
+  return res.text;
+}
+
+export async function checkTypo(text: string, typed_word: string): Promise<{ is_typo: boolean, corrected_word: string | null, not_found: boolean }> {
+  return fetchApi<{ is_typo: boolean, corrected_word: string | null, not_found: boolean }>('/api/import/check-typo', {
+    method: 'POST',
+    body: JSON.stringify({ text, typed_word }),
+  });
+}
+
+// ================= Review System =================
+
+export async function fetchReviewQueue(limit: number = 20): Promise<VocabularyWord[]> {
+  const result = await fetchApi<{ items: VocabularyWord[]; count: number }>(`/api/review/queue?limit=${limit}`);
   return result.items;
 }
 
-export async function fetchWordById(wordId: number): Promise<VocabularyWord> {
-  // 获取单词详情，对应详情页。
-  return parseJsonResponse<VocabularyWord>(`/api/words/${wordId}`);
+export async function submitReviewAnswer(wordId: string | number, answer: 'again' | 'hard' | 'good' | 'easy'): Promise<VocabularyWord> {
+  return fetchApi<VocabularyWord>('/api/review/answer', {
+    method: 'POST',
+    body: JSON.stringify({ word_id: wordId, answer }),
+  });
+}
+
+// ================= Words =================
+
+function mapBackendWord(item: any): VocabularyWord {
+  return {
+    ...item,
+    tags: item.tags?.map((t: any) => t.tag?.name || t.name) || [],
+    collocations: item.collocations?.map((c: any) => c.phrase) || [],
+    synonyms: item.synonyms?.filter((s: any) => s.relation_type === 'synonym').map((s: any) => s.related_word) || [],
+    relatedWords: item.synonyms?.filter((s: any) => s.relation_type === 'related').map((s: any) => s.related_word) || [],
+  };
+}
+
+export async function fetchWords(): Promise<VocabularyWord[]> {
+  const result = await fetchApi<{ items: any[]; count: number }>('/api/words');
+  return result.items.map(mapBackendWord);
+}
+
+export async function fetchWordById(wordId: string | number): Promise<VocabularyWord> {
+  const item = await fetchApi<any>(`/api/words/${wordId}`);
+  return mapBackendWord(item);
+}
+
+export async function createWord(data: Partial<VocabularyWord>): Promise<VocabularyWord> {
+  return fetchApi<VocabularyWord>('/api/words', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateWord(wordId: string | number, data: Partial<VocabularyWord>): Promise<VocabularyWord> {
+  return fetchApi<VocabularyWord>(`/api/words/${wordId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteWord(wordId: string | number): Promise<void> {
+  return fetchApi<void>(`/api/words/${wordId}`, {
+    method: 'DELETE',
+  });
+}
+
+// ================= Collections =================
+
+export interface Collection {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+}
+
+export async function fetchCollections(): Promise<Collection[]> {
+  const result = await fetchApi<{ items: Collection[]; count: number }>('/api/collections');
+  return result.items;
+}
+
+export async function createCollection(data: Partial<Collection>): Promise<Collection> {
+  return fetchApi<Collection>('/api/collections', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// ================= Tags =================
+
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+  created_at: string;
+}
+
+export async function fetchTags(): Promise<Tag[]> {
+  const result = await fetchApi<{ items: Tag[]; count: number }>('/api/tags');
+  return result.items;
+}
+
+
+
+export async function fetchStats(): Promise<any> {
+  return fetchApi<any>('/api/stats');
 }

@@ -1,11 +1,14 @@
 import { ArrowLeft, Edit2, Trash2, Plus, MoreVertical, Clock } from 'lucide-react';
+import { useNavigate, useLocation } from "react-router";
 
 interface CollectionDetailProps {
-  onNavigate: (page: string) => void;
   data?: any;
 }
 
-export function CollectionDetail({ onNavigate, data }: CollectionDetailProps) {
+export function CollectionDetail() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const data = location.state;
   const collection = data || { name: 'Business German', count: 87, color: 'bg-blue-500' };
 
   const words = [
@@ -19,7 +22,7 @@ export function CollectionDetail({ onNavigate, data }: CollectionDetailProps) {
   return (
     <div className="p-8 space-y-6">
       <button
-        onClick={() => onNavigate('collections')}
+        onClick={() => navigate('/collections')}
         className="flex items-center gap-2 text-[14px] text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />

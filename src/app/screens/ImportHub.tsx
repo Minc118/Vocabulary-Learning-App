@@ -1,10 +1,12 @@
 import { Upload, FileText, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useNavigate, useLocation } from "react-router";
 
-interface ImportHubProps {
-  onNavigate: (page: string) => void;
-}
 
-export function ImportHub({ onNavigate }: ImportHubProps) {
+
+export function ImportHub() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const data = location.state;
   return (
     <div className="p-8 space-y-6">
       <div>
@@ -42,7 +44,7 @@ export function ImportHub({ onNavigate }: ImportHubProps) {
         </div>
 
         <button
-          onClick={() => onNavigate('import-step1')}
+          onClick={() => navigate('/import/step1')}
           className="w-full h-11 mt-8 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-[14px] flex items-center justify-center gap-2"
         >
           Start New Import

@@ -1,10 +1,16 @@
-import { Search, Bell, User } from 'lucide-react';
+import { Search, Bell, User, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface TopBarProps {
   isNavCollapsed: boolean;
 }
 
 export function TopBar({ isNavCollapsed }: TopBarProps) {
+  const { signOut, user } = useAuth();
+  
+  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const fullName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email;
+
   return (
     <header className={`h-16 border-b border-border bg-card fixed top-0 right-0 ${isNavCollapsed ? 'left-16' : 'left-56'} z-10 transition-all duration-300`}>
       <div className="h-full px-8 flex items-center justify-between">
@@ -20,11 +26,26 @@ export function TopBar({ isNavCollapsed }: TopBarProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-accent transition-colors">
+          <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-accent transition-colors" title="Notifications">
             <Bell className="w-[18px] h-[18px]" strokeWidth={1.5} />
           </button>
-          <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-accent transition-colors">
-            <User className="w-[18px] h-[18px]" strokeWidth={1.5} />
+          
+          <button className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-accent transition-colors" title={fullName || "Profile"}>
+            {avatarUrl ? (
+              <img 
+                src={avatarUrl} 
+                alt={fullName || "User Profile"} 
+                className="w-6 h-6 rounded-full object-cover border border-border"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <User className="w-[18px] h-[18px]" strokeWidth={1.5} />
+            )}
+          </button>
+          
+          <div className="w-px h-5 bg-border mx-1"></div>
+          <button onClick={signOut} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-accent hover:text-red-500 transition-colors" title="Sign Out">
+            <LogOut className="w-[18px] h-[18px]" strokeWidth={1.5} />
           </button>
         </div>
       </div>

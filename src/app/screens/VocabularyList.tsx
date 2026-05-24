@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Plus, Filter, SlidersHorizontal, MoreVertical, Clock, Tag } from 'lucide-react';
+import { useNavigate, useLocation } from "react-router";
+import { Plus, Filter, SlidersHorizontal, MoreVertical, Clock, Tag, Volume2 } from 'lucide-react';
 import { checkBackendConnection, fetchWords, type VocabularyWord } from '../../lib/api';
+import { speakWord } from '../../lib/speech';
 
-interface VocabularyListProps {
-  onNavigate: (page: string, data?: any) => void;
-}
 
-export function VocabularyList({ onNavigate }: VocabularyListProps) {
+
+export function VocabularyList() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const data = location.state;
   // 这三个状态分别表示：
   // 1. 后端连接状态
   // 2. 后端返回的业务数据
@@ -89,7 +92,7 @@ export function VocabularyList({ onNavigate }: VocabularyListProps) {
           </div>
         </div>
         <button
-          onClick={() => onNavigate('add-word')}
+          onClick={() => navigate('/vocabulary/new')}
           className="h-10 px-5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-[14px] flex items-center gap-2"
         >
           <Plus className="w-4 h-4" strokeWidth={2} />
@@ -160,18 +163,30 @@ export function VocabularyList({ onNavigate }: VocabularyListProps) {
                 key={item.id}
                 // 点击一行后，前端把该词对象作为页面参数带去详情页。
                 // 当前项目没有用 react-router，所以这里还是项目原本的“手动切页”模式。
-                onClick={() => onNavigate('word-detail', item)}
+                onClick={() => navigate('/vocabulary/' + item.id, { state: item })}
                 className="hover:bg-accent/50 cursor-pointer transition-colors"
               >
                 <td className="px-6 py-4">
-                  <div className="font-medium text-[14px]">{item.word}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium text-[14px]">{item.word}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        speakWord(item.word, item.language);
+                      }}
+                      className="w-5 h-5 inline-flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors translate-y-[1.5px]"
+                      title="Pronounce"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    </button>
+                  </div>
                   <div className="text-[12px] text-muted-foreground">{item.pos}</div>
                 </td>
                 <td className="px-6 py-4 text-[14px]">{item.translation}</td>
                 <td className="px-6 py-4 text-[14px]">{item.language}</td>
                 <td className="px-6 py-4">
                   <div className="flex gap-1.5">
-                    {item.tags.map((tag, j) => (
+                    {(item.tags || []).map((tag, j) => (
                       <span
                         key={j}
                         className="px-2 py-0.5 bg-primary/10 text-primary rounded text-[11px] font-medium"

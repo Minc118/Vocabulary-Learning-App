@@ -1,10 +1,29 @@
-import { RotateCcw, TrendingUp, Clock, Calendar } from 'lucide-react';
+import { RotateCcw, TrendingUp, Clock, Calendar, Loader2 } from 'lucide-react';
+import { useNavigate } from "react-router";
+import { useState, useEffect } from 'react';
+import { fetchReviewQueue, type VocabularyWord } from '../../lib/api';
 
-interface ReviewHubProps {
-  onNavigate: (page: string) => void;
-}
+export function ReviewHub() {
+  const navigate = useNavigate();
+  const [dueCount, setDueCount] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedModes, setSelectedModes] = useState({
+    flashcard: true,
+    multipleChoice: true,
+    spelling: true
+  });
 
-export function ReviewHub({ onNavigate }: ReviewHubProps) {
+  const activeModes = Object.entries(selectedModes).filter(([_, v]) => v).map(([k]) => k);
+
+  useEffect(() => {
+    fetchReviewQueue(100)
+      .then(words => {
+        setDueCount(words.length);
+      })
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
+
   return (
     <div className="p-8 space-y-6">
       <div>
@@ -17,35 +36,43 @@ export function ReviewHub({ onNavigate }: ReviewHubProps) {
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="text-white/80 text-[13px] uppercase tracking-wide mb-2">Due Today</div>
-            <div className="text-[56px] font-medium leading-none mb-2">24</div>
+            <div className="text-[56px] font-medium leading-none mb-2">
+              {isLoading ? <Loader2 className="w-12 h-12 animate-spin text-white/50" /> : dueCount}
+            </div>
             <div className="text-[16px] text-white/90">Words ready for review</div>
           </div>
           <div className="text-right">
             <div className="text-white/80 text-[13px] mb-1">Estimated time</div>
-            <div className="text-[24px] font-medium">8 min</div>
+            <div className="text-[24px] font-medium">
+              {dueCount !== null ? Math.ceil(dueCount / 3) : 0} min
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white/10 rounded-lg p-4">
-            <div className="text-white/70 text-[12px] mb-1">New</div>
-            <div className="text-[20px] font-medium">8</div>
-          </div>
-          <div className="bg-white/10 rounded-lg p-4">
-            <div className="text-white/70 text-[12px] mb-1">Learning</div>
-            <div className="text-[20px] font-medium">12</div>
-          </div>
-          <div className="bg-white/10 rounded-lg p-4">
-            <div className="text-white/70 text-[12px] mb-1">Review</div>
-            <div className="text-[20px] font-medium">4</div>
+        <div className="mb-6 space-y-3">
+          <div className="text-white/80 text-[13px] uppercase tracking-wide">Review Modes</div>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={selectedModes.flashcard} onChange={(e) => setSelectedModes({...selectedModes, flashcard: e.target.checked})} className="rounded bg-white/20 border-white/30 text-white focus:ring-0 w-4 h-4" />
+              <span className="text-[14px]">Flashcard</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={selectedModes.multipleChoice} onChange={(e) => setSelectedModes({...selectedModes, multipleChoice: e.target.checked})} className="rounded bg-white/20 border-white/30 text-white focus:ring-0 w-4 h-4" />
+              <span className="text-[14px]">Multiple Choice</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={selectedModes.spelling} onChange={(e) => setSelectedModes({...selectedModes, spelling: e.target.checked})} className="rounded bg-white/20 border-white/30 text-white focus:ring-0 w-4 h-4" />
+              <span className="text-[14px]">Spelling</span>
+            </label>
           </div>
         </div>
 
         <button
-          onClick={() => onNavigate('review-session')}
-          className="w-full h-12 bg-white text-primary rounded-lg hover:bg-white/95 transition-colors font-medium text-[15px]"
+          onClick={() => navigate('/review/session', { state: { activeModes } })}
+          disabled={dueCount === 0 || isLoading || activeModes.length === 0}
+          className="w-full h-12 bg-white text-primary rounded-lg hover:bg-white/95 transition-colors font-medium text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Start Review Session
+          {dueCount === 0 ? "You're all caught up!" : "Start Review Session"}
         </button>
       </div>
 
@@ -56,7 +83,7 @@ export function ReviewHub({ onNavigate }: ReviewHubProps) {
             <Calendar className="w-4 h-4" strokeWidth={1.5} />
             <span className="text-[13px]">This Week</span>
           </div>
-          <div className="text-[32px] font-medium mb-1">156</div>
+          <div className="text-[32px] font-medium mb-1">--</div>
           <div className="text-[13px] text-muted-foreground">Cards reviewed</div>
         </div>
 
@@ -65,7 +92,7 @@ export function ReviewHub({ onNavigate }: ReviewHubProps) {
             <TrendingUp className="w-4 h-4" strokeWidth={1.5} />
             <span className="text-[13px]">Accuracy</span>
           </div>
-          <div className="text-[32px] font-medium mb-1">87%</div>
+          <div className="text-[32px] font-medium mb-1">--%</div>
           <div className="text-[13px] text-muted-foreground">Average recall rate</div>
         </div>
 
@@ -74,28 +101,8 @@ export function ReviewHub({ onNavigate }: ReviewHubProps) {
             <Clock className="w-4 h-4" strokeWidth={1.5} />
             <span className="text-[13px]">Study Time</span>
           </div>
-          <div className="text-[32px] font-medium mb-1">2.3h</div>
+          <div className="text-[32px] font-medium mb-1">--</div>
           <div className="text-[13px] text-muted-foreground">Total this week</div>
-        </div>
-      </div>
-
-      {/* Upcoming Reviews */}
-      <div className="bg-card border border-border rounded-lg">
-        <div className="px-6 py-4 border-b border-border">
-          <h2 className="font-medium text-[15px]">Upcoming Reviews</h2>
-        </div>
-        <div className="divide-y divide-border">
-          {[
-            { date: 'Tomorrow', count: 18 },
-            { date: 'In 2 days', count: 12 },
-            { date: 'In 3 days', count: 25 },
-            { date: 'In 4 days', count: 8 },
-          ].map((item, i) => (
-            <div key={i} className="px-6 py-4 flex items-center justify-between">
-              <div className="text-[14px]">{item.date}</div>
-              <div className="text-[14px] text-muted-foreground">{item.count} words</div>
-            </div>
-          ))}
         </div>
       </div>
     </div>

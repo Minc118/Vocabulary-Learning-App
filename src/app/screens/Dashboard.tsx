@@ -1,10 +1,12 @@
 import { Plus, Upload, RotateCcw, TrendingUp, Book, Target } from 'lucide-react';
+import { useNavigate, useLocation } from "react-router";
 
-interface DashboardProps {
-  onNavigate: (page: string, data?: any) => void;
-}
 
-export function Dashboard({ onNavigate }: DashboardProps) {
+
+export function Dashboard() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const data = location.state;
   return (
     <div className="p-8 space-y-6">
       <div>
@@ -26,7 +28,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </div>
         </div>
         <button
-          onClick={() => onNavigate('review-session')}
+          onClick={() => navigate('/review/session')}
           className="mt-6 h-11 px-6 bg-white text-primary rounded-lg hover:bg-white/95 transition-colors font-medium text-[14px]"
         >
           Start Review
@@ -36,7 +38,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* Quick Actions */}
       <div className="grid grid-cols-3 gap-4">
         <button
-          onClick={() => onNavigate('add-word')}
+          onClick={() => navigate('/vocabulary/new')}
           className="bg-card border border-border rounded-lg p-5 hover:border-primary/20 hover:bg-accent/50 transition-all text-left group"
         >
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
@@ -47,7 +49,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </button>
 
         <button
-          onClick={() => onNavigate('import')}
+          onClick={() => navigate('/import')}
           className="bg-card border border-border rounded-lg p-5 hover:border-primary/20 hover:bg-accent/50 transition-all text-left group"
         >
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
@@ -58,7 +60,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </button>
 
         <button
-          onClick={() => onNavigate('vocabulary')}
+          onClick={() => navigate('/vocabulary')}
           className="bg-card border border-border rounded-lg p-5 hover:border-primary/20 hover:bg-accent/50 transition-all text-left group"
         >
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
@@ -117,7 +119,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           ].map((item, i) => (
             <button
               key={i}
-              onClick={() => onNavigate('word-detail', item)}
+              onClick={() => navigate('/vocabulary/' + item.id, { state: item })}
               className="w-full px-6 py-4 hover:bg-accent transition-colors text-left flex items-center justify-between group"
             >
               <div className="flex-1">

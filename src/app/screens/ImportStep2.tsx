@@ -1,20 +1,30 @@
 import { ArrowLeft, ArrowRight, CheckSquare, Square, Filter } from 'lucide-react';
-import { useState } from 'react';
+import { useNavigate, useLocation } from "react-router";
+import { useState, useEffect } from 'react';
 
-interface ImportStep2Props {
-  onNavigate: (page: string) => void;
-}
+export function ImportStep2() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const data = location.state;
+  
+  const text = data?.text || '';
+  const language = data?.language || 'English';
+  const title = data?.title || '';
+  const initialCandidates = data?.candidates || [];
 
-export function ImportStep2({ onNavigate }: ImportStep2Props) {
-  const candidates = [
-    { word: 'Verantwortung', context: 'trägt die volle Verantwortung für', freq: 3, existing: false },
-    { word: 'Genauigkeit', context: 'mit höchster Genauigkeit arbeiten', freq: 2, existing: false },
-    { word: 'entwickeln', context: 'neue Strategien entwickeln', freq: 2, existing: true },
-    { word: 'Zusammenarbeit', context: 'internationale Zusammenarbeit fördern', freq: 1, existing: false },
-    { word: 'nachhaltig', context: 'nachhaltige Lösungen finden', freq: 2, existing: false },
-  ];
+  const [candidates, setCandidates] = useState<any[]>(initialCandidates);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  
+  const [manualWord, setManualWord] = useState('');
+  const [isCheckingTypo, setIsCheckingTypo] = useState(false);
+  const [typoError, setTypoError] = useState<string | null>(null);
 
-  const [selected, setSelected] = useState<Set<number>>(new Set([0, 1, 3, 4]));
+  // Auto-select all by default when candidates load
+  useEffect(() => {
+    if (candidates.length > 0) {
+      setSelected(new Set(candidates.map((_, i) => i)));
+    }
+  }, [candidates]);
 
   const toggleSelect = (index: number) => {
     const newSelected = new Set(selected);
@@ -26,11 +36,70 @@ export function ImportStep2({ onNavigate }: ImportStep2Props) {
     setSelected(newSelected);
   };
 
+  const handleManualAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const wordToAdd = manualWord.trim();
+    if (!wordToAdd) return;
+    
+    setIsCheckingTypo(true);
+    setTypoError(null);
+    try {
+      // dynamically import to avoid unused errors if I forgot to import it top level
+      const { checkTypo } = await import('../../lib/api');
+      const result = await checkTypo(text, wordToAdd);
+      
+      if (result.not_found) {
+        setTypoError(`'${wordToAdd}' was not found in the text.`);
+      } else {
+        let finalWord = wordToAdd;
+        if (result.is_typo && result.corrected_word) {
+          const confirmCorrection = window.confirm(`'${wordToAdd}' looks like a typo. Did you mean '${result.corrected_word}'?`);
+          if (confirmCorrection) {
+            finalWord = result.corrected_word;
+          }
+        }
+        
+        // Add to candidates
+        const newCandidate = {
+          word: finalWord,
+          translation: 'Pending AI...',
+          pos: 'Unknown',
+          context: 'Manually added'
+        };
+        
+        setCandidates(prev => [...prev, newCandidate]);
+        // Select it automatically
+        setSelected(prev => {
+          const next = new Set(prev);
+          next.add(candidates.length);
+          return next;
+        });
+        setManualWord('');
+      }
+    } catch (err) {
+      setTypoError(err instanceof Error ? err.message : 'Check failed');
+    } finally {
+      setIsCheckingTypo(false);
+    }
+  };
+
+  const handleContinue = () => {
+    const selectedWords = candidates.filter((_, i) => selected.has(i));
+    navigate('/import/step3', {
+      state: {
+        text,
+        language,
+        title,
+        words: selectedWords
+      }
+    });
+  };
+
   return (
     <div className="p-8">
       <div className="max-w-7xl mx-auto">
         <button
-          onClick={() => onNavigate('import-step1')}
+          onClick={() => navigate('/import/step1')}
           className="flex items-center gap-2 text-[14px] text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
@@ -52,22 +121,10 @@ export function ImportStep2({ onNavigate }: ImportStep2Props) {
         <div className="grid grid-cols-5 gap-6">
           {/* Left: Text Preview */}
           <div className="col-span-2">
-            <div className="bg-card border border-border rounded-lg p-6 sticky top-24">
-              <h3 className="font-medium text-[15px] mb-4">Source Text</h3>
-              <div className="text-[14px] leading-relaxed space-y-3">
-                <p>
-                  In der modernen Geschäftswelt trägt jeder Manager die volle{' '}
-                  <mark className="bg-primary/20 px-1">Verantwortung</mark> für sein Team. Die{' '}
-                  <mark className="bg-primary/20 px-1">Genauigkeit</mark> bei der Planung ist entscheidend.
-                </p>
-                <p>
-                  Teams müssen neue Strategien <mark className="bg-muted px-1">entwickeln</mark> und die internationale{' '}
-                  <mark className="bg-primary/20 px-1">Zusammenarbeit</mark> fördern.
-                </p>
-                <p>
-                  Es ist wichtig, <mark className="bg-primary/20 px-1">nachhaltige</mark> Lösungen für komplexe
-                  Herausforderungen zu finden.
-                </p>
+            <div className="bg-card border border-border rounded-lg p-6 sticky top-24 max-h-[calc(100vh-120px)] flex flex-col">
+              <h3 className="font-medium text-[15px] mb-4 shrink-0">Source Text</h3>
+              <div className="text-[14px] leading-relaxed space-y-3 whitespace-pre-wrap font-mono break-words overflow-y-auto flex-1 pr-2">
+                {text || "No text provided."}
               </div>
             </div>
           </div>
@@ -92,55 +149,77 @@ export function ImportStep2({ onNavigate }: ImportStep2Props) {
                 Deselect All
               </button>
             </div>
+            
+            <form onSubmit={handleManualAdd} className="bg-card border border-border p-3 rounded-lg flex items-center gap-2">
+              <input 
+                type="text"
+                value={manualWord}
+                onChange={e => setManualWord(e.target.value)}
+                placeholder="Manually add a word from the text..."
+                className="flex-1 h-9 px-3 bg-input-background border border-border rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-ring/20"
+              />
+              <button 
+                type="submit" 
+                disabled={isCheckingTypo || !manualWord.trim()}
+                className="h-9 px-4 bg-secondary text-secondary-foreground rounded-lg text-[13px] disabled:opacity-50"
+              >
+                {isCheckingTypo ? 'Checking...' : 'Add Word'}
+              </button>
+            </form>
+            {typoError && <div className="text-[12px] text-destructive px-1">{typoError}</div>}
 
             <div className="space-y-2">
-              {candidates.map((item, i) => (
-                <button
-                  key={i}
-                  onClick={() => toggleSelect(i)}
-                  className={`w-full bg-card border rounded-lg p-4 text-left hover:border-primary/30 transition-all ${
-                    selected.has(i) ? 'border-primary' : 'border-border'
-                  } ${item.existing ? 'opacity-60' : ''}`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="mt-0.5">
-                      {selected.has(i) ? (
-                        <CheckSquare className="w-5 h-5 text-primary" strokeWidth={1.5} />
-                      ) : (
-                        <Square className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
-                      )}
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="font-medium text-[15px]">{item.word}</span>
-                        {item.existing && (
-                          <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[11px] font-medium">
-                            Already saved
-                          </span>
+              {candidates.length === 0 ? (
+                <div className="text-[14px] text-muted-foreground text-center py-10">
+                  No vocabulary words detected.
+                </div>
+              ) : (
+                candidates.map((item: any, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => toggleSelect(i)}
+                    className={`w-full bg-card border rounded-lg p-4 text-left hover:border-primary/30 transition-all ${
+                      selected.has(i) ? 'border-primary' : 'border-border'
+                    } ${item.existing ? 'opacity-60' : ''}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="mt-0.5">
+                        {selected.has(i) ? (
+                          <CheckSquare className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                        ) : (
+                          <Square className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
                         )}
-                        <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[11px]">
-                          {item.freq}x
-                        </span>
                       </div>
-                      <div className="text-[13px] text-muted-foreground">"{item.context}"</div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="font-medium text-[15px]">{item.word}</span>
+                          <span className="text-[13px] text-muted-foreground">{item.translation}</span>
+                          {item.existing && (
+                            <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[11px] font-medium">
+                              Already saved
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[13px] text-muted-foreground italic">"{item.context}"</div>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
           <button
-            onClick={() => onNavigate('import-step1')}
+            onClick={() => navigate('/import/step1')}
             className="h-10 px-5 border border-border rounded-lg hover:bg-accent transition-colors text-[14px]"
           >
             Back
           </button>
           <button
-            onClick={() => onNavigate('import-step3')}
+            onClick={handleContinue}
             disabled={selected.size === 0}
             className="h-10 px-5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >

@@ -1,10 +1,38 @@
 import { User, Bell, Globe, Palette, Database } from 'lucide-react';
+import { useNavigate, useLocation } from "react-router";
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
-interface SettingsProps {
-  onNavigate: (page: string) => void;
-}
+export function Settings() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
 
-export function Settings({ onNavigate }: SettingsProps) {
+  const [nativeLanguage, setNativeLanguage] = useState('Chinese');
+  const [displayName, setDisplayName] = useState('');
+  const [emailAddress, setEmailAddress] = useState('');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('nativeLanguage');
+    if (saved) {
+      setNativeLanguage(saved);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.user_metadata?.full_name || user.user_metadata?.name || '');
+      setEmailAddress(user.email || '');
+    }
+  }, [user]);
+
+  const isOAuth = user?.app_metadata?.provider === 'google';
+
+  const handleSave = () => {
+    localStorage.setItem('nativeLanguage', nativeLanguage);
+    alert('Settings saved successfully!');
+  };
+
   return (
     <div className="p-8 space-y-6">
       <div>
@@ -24,17 +52,27 @@ export function Settings({ onNavigate }: SettingsProps) {
               <label className="block text-[13px] mb-2">Display Name</label>
               <input
                 type="text"
-                defaultValue="Alex Chen"
-                className="w-full h-10 px-3 bg-input-background border border-border rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-ring/20"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                disabled={isOAuth}
+                className="w-full h-10 px-3 bg-input-background border border-border rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:opacity-70 disabled:cursor-not-allowed"
               />
+              {isOAuth && (
+                <p className="text-[11px] text-muted-foreground mt-1">Managed automatically by Google Account</p>
+              )}
             </div>
             <div>
               <label className="block text-[13px] mb-2">Email</label>
               <input
                 type="email"
-                defaultValue="alex.chen@example.com"
-                className="w-full h-10 px-3 bg-input-background border border-border rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-ring/20"
+                value={emailAddress}
+                onChange={(e) => setEmailAddress(e.target.value)}
+                disabled={isOAuth}
+                className="w-full h-10 px-3 bg-input-background border border-border rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:opacity-70 disabled:cursor-not-allowed"
               />
+              {isOAuth && (
+                <p className="text-[11px] text-muted-foreground mt-1">Managed automatically by Google Account</p>
+              )}
             </div>
           </div>
         </div>
@@ -47,13 +85,20 @@ export function Settings({ onNavigate }: SettingsProps) {
           </div>
           <div className="p-6 space-y-5">
             <div>
-              <label className="block text-[13px] mb-2">Primary Study Language</label>
-              <select className="w-full h-10 px-3 bg-input-background border border-border rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-ring/20">
-                <option>German</option>
-                <option>English</option>
-                <option>French</option>
-                <option>Spanish</option>
+              <label className="block text-[13px] mb-2">Native Translation Language</label>
+              <select 
+                value={nativeLanguage}
+                onChange={(e) => setNativeLanguage(e.target.value)}
+                className="w-full h-10 px-3 bg-input-background border border-border rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-ring/20"
+              >
+                <option value="Chinese">Chinese (中文)</option>
+                <option value="English">English</option>
+                <option value="Spanish">Spanish</option>
+                <option value="French">French</option>
+                <option value="German">German</option>
+                <option value="Japanese">Japanese</option>
               </select>
+              <p className="text-[12px] text-muted-foreground mt-1">AI will translate words and sentences into this language.</p>
             </div>
 
             <div>
@@ -159,7 +204,7 @@ export function Settings({ onNavigate }: SettingsProps) {
         </div>
 
         <div className="flex justify-end pt-4">
-          <button className="h-10 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-[14px]">
+          <button onClick={handleSave} className="h-10 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-[14px]">
             Save Changes
           </button>
         </div>
