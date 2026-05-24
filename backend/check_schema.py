@@ -1,11 +1,17 @@
 import sys
+import os
 from supabase import create_client, Client
 
 # This script queries the Supabase Cloud database system tables to inspect the actual column schema of 'words'.
 # Targets: Supabase Cloud database (https://tpkqrodztgwkebionqbv.supabase.co)
 
-SUPABASE_URL = "https://tpkqrodztgwkebionqbv.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwa3Fyb2R6dGd3a2ViaW9ucWJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjM0OTIsImV4cCI6MjA5MTYzOTQ5Mn0.PhYB-EFNRqMac0KFOo5piWnS5-xOfM8SJdxzyiVpMrM"
+SUPABASE_URL = os.environ.get("SUPABASE_URL") or os.environ.get("VITE_SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_KEY") or os.environ.get("VITE_SUPABASE_ANON_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("ERROR: Environment variables SUPABASE_URL and SUPABASE_ANON_KEY must be set to run this script.")
+    print("Please set them in your environment (e.g., export SUPABASE_URL=... and export SUPABASE_ANON_KEY=...)")
+    sys.exit(1)
 
 def check_schema():
     print(f"-> Connecting to Supabase Cloud: {SUPABASE_URL}...")

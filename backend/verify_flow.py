@@ -9,8 +9,13 @@ from supabase import create_client, Client
 # This script will log in via signInWithPassword, get a token, and run e2e API verification on the running Flask backend.
 
 API_BASE_URL = "http://127.0.0.1:5001/api"
-SUPABASE_URL = "https://tpkqrodztgwkebionqbv.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwa3Fyb2R6dGd3a2ViaW9ucWJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjM0OTIsImV4cCI6MjA5MTYzOTQ5Mn0.PhYB-EFNRqMac0KFOo5piWnS5-xOfM8SJdxzyiVpMrM"
+SUPABASE_URL = os.environ.get("SUPABASE_URL") or os.environ.get("VITE_SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_KEY") or os.environ.get("VITE_SUPABASE_ANON_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("ERROR: Environment variables SUPABASE_URL and SUPABASE_ANON_KEY must be set to run this script.")
+    print("Please set them in your environment (e.g., export SUPABASE_URL=... and export SUPABASE_ANON_KEY=...)")
+    sys.exit(1)
 
 EMAIL = "tester@voca.com"
 PASSWORD = "voca_dev_password"
