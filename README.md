@@ -4,6 +4,8 @@ An AI-assisted vocabulary learning prototype for turning real reading material i
 
 一个面向真实阅读场景的 AI 辅助词汇学习原型，目标是把阅读中遇到的生词沉淀为可整理、可复习、可追踪的个人词汇系统。
 
+![Voca UI Preview](docs/images/preview.png)
+
 ## Overview
 
 This project explores a complete vocabulary learning workflow:
