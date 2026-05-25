@@ -12,6 +12,7 @@ from routes.ai import ai_bp
 from routes.import_text import import_bp
 from routes.review import review_bp
 from routes.stats import stats_bp
+from routes.export import export_bp
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -55,6 +56,7 @@ def create_app() -> Flask:
     app.register_blueprint(import_bp, url_prefix='/api/import')
     app.register_blueprint(review_bp, url_prefix='/api/review')
     app.register_blueprint(stats_bp, url_prefix='/api/stats')
+    app.register_blueprint(export_bp, url_prefix='/api/export')
 
     return app
 

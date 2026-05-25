@@ -192,3 +192,21 @@ export async function fetchTags(): Promise<Tag[]> {
 export async function fetchStats(): Promise<any> {
   return fetchApi<any>('/api/stats');
 }
+
+// ================= Export =================
+
+export async function exportVocabularyData(): Promise<any[]> {
+  return fetchApi<any[]>('/api/export/vocabulary');
+}
+
+export async function exportCollectionsData(): Promise<any[]> {
+  return fetchApi<any[]>('/api/export/collections');
+}
+
+export async function exportReviewProgressData(): Promise<any[]> {
+  return fetchApi<any[]>('/api/export/review-progress');
+}
+
+export async function exportAllData(): Promise<{ vocabulary: any[]; collections: any[] }> {
+  return fetchApi<{ vocabulary: any[]; collections: any[] }>('/api/export/all');
+}
