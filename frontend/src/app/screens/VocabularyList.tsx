@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from "react-router";
-import { Plus, Filter, SlidersHorizontal, MoreVertical, Clock, Tag, Volume2 } from 'lucide-react';
-import { checkBackendConnection, fetchWords, type VocabularyWord } from '../../lib/api';
+import { Plus, Filter, SlidersHorizontal, MoreVertical, Clock, Tag, Volume2, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { checkBackendConnection, fetchWords, deleteWord, type VocabularyWord } from '../../lib/api';
 import { speakWord } from '../../lib/speech';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '../components/ui/alert-dialog';
 
 
 
@@ -21,6 +32,37 @@ export function VocabularyList() {
   const [connectionMessage, setConnectionMessage] = useState('Connecting to Flask vocabulary service...');
   const [words, setWords] = useState<VocabularyWord[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // States for three-dot menu and delete confirmation
+  const [wordToDelete, setWordToDelete] = useState<VocabularyWord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const loadWordsList = async () => {
+    try {
+      const items = await fetchWords();
+      setWords(items);
+      setLoadError(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load words from backend';
+      setLoadError(message);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!wordToDelete) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteWord(wordToDelete.id);
+      await loadWordsList();
+      setWordToDelete(null);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete word');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     // isMounted 是一个很常见的小保护。
@@ -215,15 +257,43 @@ export function VocabularyList() {
                     {item.mastery}
                   </span>
                 </td>
-                <td className="px-3 py-4">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    className="w-8 h-8 flex items-center justify-center rounded hover:bg-accent"
-                  >
-                    <MoreVertical className="w-4 h-4" strokeWidth={1.5} />
-                  </button>
+                <td className="px-3 py-4" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded hover:bg-accent cursor-pointer"
+                      >
+                        <MoreVertical className="w-4 h-4" strokeWidth={1.5} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/vocabulary/' + item.id, { state: { ...item, isDirectEditing: true } });
+                        }}
+                        className="cursor-pointer flex items-center gap-2"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteError(null);
+                          setWordToDelete(item);
+                        }}
+                        className="cursor-pointer flex items-center gap-2 text-destructive"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}
@@ -238,6 +308,39 @@ export function VocabularyList() {
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={wordToDelete !== null} onOpenChange={(open) => !open && setWordToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Word</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the word <strong className="font-semibold text-foreground">"{wordToDelete?.word}"</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          {deleteError && (
+            <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-[12px] text-destructive animate-in fade-in-50 duration-200">
+              {deleteError}
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} onClick={() => setWordToDelete(null)} className="cursor-pointer">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault(); // Keep modal open to show backend error if deletion fails
+                handleDeleteConfirm();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

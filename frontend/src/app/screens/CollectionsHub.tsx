@@ -2,6 +2,9 @@ import { Plus, FolderOpen, Book, Loader2 } from 'lucide-react';
 import { useNavigate } from "react-router";
 import { useEffect, useState } from 'react';
 import { fetchCollections, createCollection, type Collection } from '../../lib/api';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 
 export function CollectionsHub() {
   const navigate = useNavigate();
@@ -9,6 +12,12 @@ export function CollectionsHub() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+
+  // Modal states for creating collections
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [newCollectionDesc, setNewCollectionDesc] = useState('');
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const loadCollections = async () => {
     setIsLoading(true);
@@ -27,16 +36,31 @@ export function CollectionsHub() {
     loadCollections();
   }, []);
 
-  const handleCreate = async () => {
-    const name = window.prompt('Enter collection name:');
-    if (!name || !name.trim()) return;
+  const handleCreate = () => {
+    setNewCollectionName('');
+    setNewCollectionDesc('');
+    setCreateError(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmitCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCollectionName.trim()) {
+      setCreateError('Collection name is required');
+      return;
+    }
     
     setIsCreating(true);
+    setCreateError(null);
     try {
-      await createCollection({ name: name.trim() });
+      await createCollection({
+        name: newCollectionName.trim(),
+        description: newCollectionDesc.trim()
+      });
       await loadCollections();
+      setIsDialogOpen(false);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to create collection');
+      setCreateError(err instanceof Error ? err.message : 'Failed to create collection');
     } finally {
       setIsCreating(false);
     }
@@ -103,8 +127,7 @@ export function CollectionsHub() {
                     </div>
                     <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
                       <Book className="w-3.5 h-3.5" strokeWidth={1.5} />
-                      {/* Placeholder word count, would require a join/aggregation on backend */}
-                      Words
+                      {(collection as any).word_count ?? 0} words
                     </div>
                   </div>
                 </div>
@@ -153,6 +176,70 @@ export function CollectionsHub() {
           </div>
         </>
       )}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <form onSubmit={handleSubmitCreate} className="space-y-4">
+            <DialogHeader>
+              <DialogTitle>New Collection</DialogTitle>
+              <DialogDescription>
+                Create a new collection to organize your vocabulary words.
+              </DialogDescription>
+            </DialogHeader>
+
+            {createError && (
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-[12px] text-destructive animate-in fade-in-50 duration-200">
+                {createError}
+              </div>
+            )}
+
+            <div className="space-y-3.5">
+              <div className="grid gap-1.5">
+                <Label htmlFor="name">Collection Name</Label>
+                <Input
+                  id="name"
+                  value={newCollectionName}
+                  onChange={(e) => setNewCollectionName(e.target.value)}
+                  placeholder="e.g. TOEFL High Frequency, German B2..."
+                  disabled={isCreating}
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <textarea
+                  id="description"
+                  value={newCollectionDesc}
+                  onChange={(e) => setNewCollectionDesc(e.target.value)}
+                  placeholder="Describe the purpose of this collection..."
+                  disabled={isCreating}
+                  className="resize-none border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex min-h-16 w-full rounded-md border bg-input-background px-3 py-2 text-sm transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-2">
+              <DialogClose asChild>
+                <button
+                  type="button"
+                  disabled={isCreating}
+                  className="px-4 py-2 border border-border rounded-lg text-[14px] hover:bg-accent transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </DialogClose>
+              <button
+                type="submit"
+                disabled={isCreating}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-[14px] flex items-center justify-center gap-2 disabled:opacity-50 min-w-[100px] cursor-pointer"
+              >
+                {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create'}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

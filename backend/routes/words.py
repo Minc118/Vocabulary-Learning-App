@@ -34,7 +34,13 @@ def list_words():
         return jsonify({"message": "Supabase client not initialized"}), 500
         
     try:
-        response = supabase.table('words').select('*, examples(*), collocations(*), synonyms(*), tags:word_tags(tag:tags(*))').execute()
+        query = supabase.table('words').select('*, examples(*), collocations(*), synonyms(*), tags:word_tags(tag:tags(*))')
+        
+        collection_id = request.args.get('collection_id')
+        if collection_id:
+            query = query.eq('collection_id', collection_id)
+        
+        response = query.execute()
         return jsonify({"items": response.data, "count": len(response.data)})
     except Exception as e:
         return jsonify({"message": str(e)}), 500

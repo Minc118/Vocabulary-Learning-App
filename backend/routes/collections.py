@@ -9,8 +9,16 @@ def list_collections():
         return jsonify({"message": "Supabase client not initialized"}), 500
         
     try:
-        response = supabase.table('collections').select('*').execute()
-        return jsonify({"items": response.data, "count": len(response.data)})
+        response = supabase.table('collections').select('*, words(count)').execute()
+        items = []
+        for col in response.data:
+            word_count = 0
+            words_data = col.pop('words', [])
+            if words_data and isinstance(words_data, list) and len(words_data) > 0:
+                word_count = words_data[0].get('count', 0)
+            col['word_count'] = word_count
+            items.append(col)
+        return jsonify({"items": items, "count": len(items)})
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 

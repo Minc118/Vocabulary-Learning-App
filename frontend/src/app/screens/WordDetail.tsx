@@ -3,6 +3,16 @@ import { useNavigate, useLocation } from "react-router";
 import { ArrowLeft, Edit2, Trash2, Tag, FolderOpen, Clock, TrendingUp, Loader2, Volume2 } from 'lucide-react';
 import { fetchWordById, updateWord, deleteWord, type VocabularyWord } from '../../lib/api';
 import { speakWord } from '../../lib/speech';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '../components/ui/alert-dialog';
 
 interface WordDetailProps {
   data?: Partial<VocabularyWord>;
@@ -42,6 +52,9 @@ export function WordDetail() {
   const [editForm, setEditForm] = useState<Partial<VocabularyWord>>({});
   const [isSaving, setIsSaving] = useState(false);
 
+  // AlertDialog state for deletion
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   useEffect(() => {
     if (!data?.id) {
       setWord((current) => ({ ...current, ...data }));
@@ -68,6 +81,18 @@ export function WordDetail() {
         
         setWord(safeResult);
         setLoadError(null);
+
+        // Auto-enter edit mode if navigating from Edit menu
+        if (data.isDirectEditing) {
+          setEditForm({
+            word: safeResult.word,
+            translation: safeResult.translation,
+            pos: safeResult.pos,
+            language: safeResult.language,
+            definition: safeResult.definition
+          });
+          setIsEditing(true);
+        }
       } catch (error) {
         if (!isMounted) return;
         setLoadError(error instanceof Error ? error.message : 'Failed to load word details');
@@ -85,16 +110,21 @@ export function WordDetail() {
     };
   }, [data]);
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     if (!word.id) return;
-    if (!confirm('Are you sure you want to delete this word?')) return;
-    
     setIsDeleting(true);
+    setLoadError(null);
     try {
       await deleteWord(word.id);
+      setIsDeleteDialogOpen(false);
       navigate('/vocabulary');
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Failed to delete word');
+    } finally {
       setIsDeleting(false);
     }
   };
@@ -229,9 +259,9 @@ export function WordDetail() {
                   )}
                   {!isEditing && (
                     <button 
-                      onClick={handleDelete}
+                      onClick={handleDeleteClick}
                       disabled={isDeleting}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50"
+                      className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50 cursor-pointer"
                     >
                       {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" strokeWidth={1.5} />}
                     </button>
@@ -409,6 +439,33 @@ export function WordDetail() {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Word</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the word <strong className="font-semibold text-foreground">"{word.word}"</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} onClick={() => setIsDeleteDialogOpen(false)} className="cursor-pointer">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteConfirm();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

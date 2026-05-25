@@ -134,6 +134,11 @@ export async function createWord(data: Partial<VocabularyWord>): Promise<Vocabul
   });
 }
 
+export async function fetchWordsByCollection(collectionId: string): Promise<VocabularyWord[]> {
+  const result = await fetchApi<{ items: any[]; count: number }>(`/api/words?collection_id=${collectionId}`);
+  return result.items.map(mapBackendWord);
+}
+
 export async function updateWord(wordId: string | number, data: Partial<VocabularyWord>): Promise<VocabularyWord> {
   return fetchApi<VocabularyWord>(`/api/words/${wordId}`, {
     method: 'PUT',

@@ -70,9 +70,9 @@ In-memory vocabulary data
 
 Key integration files:
 
-- `src/lib/api.ts` defines the frontend API client and TypeScript data contract.
-- `src/app/screens/VocabularyList.tsx` loads the word list from the backend.
-- `src/app/screens/WordDetail.tsx` loads individual word details when an id is available.
+- `frontend/src/lib/api.ts` defines the frontend API client and TypeScript data contract.
+- `frontend/src/app/screens/VocabularyList.tsx` loads the word list from the backend.
+- `frontend/src/app/screens/WordDetail.tsx` loads individual word details when an id is available.
 - `backend/app.py` exposes the REST endpoints.
 - `backend/data.py` stores the current fixed demo vocabulary data.
 
@@ -125,6 +125,7 @@ python app.py
 In another terminal:
 
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
@@ -134,6 +135,7 @@ Open the Vite URL shown in the terminal, usually `http://localhost:5173`.
 ### 4. Build for production
 
 ```bash
+cd frontend
 npm run build
 ```
 
@@ -170,14 +172,14 @@ Services:
 - **P2 Review Engine**: spaced-repetition scheduling, review queue updates, and review metrics.
 - **P3 Product Polish**: real analytics, saved settings, stronger empty/loading/error states, and deployment hardening.
 
-More details are available in [Plan.md](Plan.md).
+More details are available in [Plan.md](docs/architecture/Plan.md).
 
 ## Project Notes
 
 Course-oriented implementation notes and learning logs are kept outside the main README so the GitHub landing page stays focused:
 
-- [Project Log](project-log/README.md)
-- [Flask REST Homework Notes](project-log/2026-04-20-flask-rest-homework.md)
+- [Project Log](docs/architecture/project-log/README.md)
+- [Flask REST Homework Notes](docs/architecture/project-log/2026-04-20-flask-rest-homework.md)
 
 ## Portfolio Note
 
