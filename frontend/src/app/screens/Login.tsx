@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router';
@@ -5,6 +6,10 @@ import { Loader2, BookOpen, Brain, Zap, Github, Sparkles } from 'lucide-react';
 
 export function Login() {
   const { session, loading } = useAuth();
+  const [redirectAttempted, setRedirectAttempted] = useState(false);
+
+  const params = new URLSearchParams(window.location.search);
+  const showDebug = params.get('debugAuth') === '1';
 
   if (loading) {
     return (
@@ -19,11 +24,28 @@ export function Login() {
   }
 
   const handleGoogleLogin = async () => {
-    if (!supabase) return;
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    });
+    console.log("login clicked");
+    console.log("supabase client present:", supabase !== null);
+    setRedirectAttempted(true);
+
+    if (!supabase) {
+      console.warn("Cannot start redirect: Supabase client is null. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY env variables.");
+      return;
+    }
+
+    try {
+      console.log("starting oauth redirect");
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin },
+      });
+      console.log("oauth call returned error:", error !== null && error !== undefined);
+      if (error) {
+        console.error("OAuth error detail:", error.message);
+      }
+    } catch (err) {
+      console.error("Uncaught OAuth redirect error:", err instanceof Error ? err.message : err);
+    }
   };
 
   return (
@@ -172,6 +194,20 @@ export function Login() {
       </section>
 
       {/* Footer */}
+      {showDebug && (
+        <div className="max-w-2xl mx-auto my-8 p-6 bg-zinc-50 border border-zinc-200 rounded-xl text-left font-mono text-xs space-y-3">
+          <h3 className="font-bold text-sm text-zinc-800 border-b pb-2">Auth Diagnostic Panel (?debugAuth=1)</h3>
+          <div>Current Pathname: {window.location.pathname}</div>
+          <div>Auth State: {loading ? 'loading' : session ? 'authenticated' : 'unauthenticated'}</div>
+          <div>Session Exists: {session ? 'true' : 'false'}</div>
+          <div>Supabase Client: {supabase ? 'initialized' : 'null'}</div>
+          <div>Supabase URL Env (VITE_SUPABASE_URL): {import.meta.env.VITE_SUPABASE_URL ? 'present' : 'missing'}</div>
+          <div>Supabase Anon Key Env (VITE_SUPABASE_ANON_KEY): {import.meta.env.VITE_SUPABASE_ANON_KEY ? 'present' : 'missing'}</div>
+          <div>API Base URL Env (VITE_API_BASE_URL): {import.meta.env.VITE_API_BASE_URL ? 'present (using custom)' : 'missing (using default)'}</div>
+          <div>Login Redirect Attempted: {redirectAttempted ? 'true' : 'false'}</div>
+        </div>
+      )}
+
       <footer className="w-full py-12 px-8 flex items-center justify-between text-xs text-zinc-400 max-w-7xl mx-auto">
         <div>&copy; 2026 Voca Systems. All rights reserved.</div>
         <div className="flex items-center gap-1 hover:text-zinc-600 transition-colors cursor-pointer">
