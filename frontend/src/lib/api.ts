@@ -17,23 +17,74 @@ function buildApiUrl(path: string) {
   return `${baseUrl.replace(/\/$/, '')}${path}`;
 }
 
+async function getFreshToken(): Promise<string | null> {
+  if (!supabase) {
+    return null;
+  }
+
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    return null;
+  }
+
+  // Check if token is expired or close to expiring (within 60 seconds)
+  const isExpiredOrClose = session.expires_at 
+    ? (session.expires_at - Date.now() / 1000 < 60) 
+    : false;
+
+  if (isExpiredOrClose) {
+    try {
+      console.log("token refreshed: starting refresh due to near expiry");
+      const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession();
+      console.log("token refreshed:", error === null && refreshedSession !== null);
+      if (refreshedSession?.access_token) {
+        return refreshedSession.access_token;
+      }
+    } catch (err) {
+      console.error("Token refresh exception:", err);
+    }
+  }
+
+  return session.access_token;
+}
+
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options?.headers as Record<string, string> || {}),
   };
 
-  if (supabase) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.access_token}`;
-    }
+  const token = await getFreshToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(buildApiUrl(path), {
+  let response = await fetch(buildApiUrl(path), {
     ...options,
     headers,
   });
+
+  if (response.status === 401 && supabase) {
+    console.log("retry after 401: starting retry");
+    try {
+      const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession();
+      const hasNewToken = error === null && refreshedSession !== null;
+      console.log("token refreshed (post 401):", hasNewToken);
+
+      if (refreshedSession?.access_token) {
+        headers['Authorization'] = `Bearer ${refreshedSession.access_token}`;
+        console.log("retry after 401: executing request retry");
+        
+        response = await fetch(buildApiUrl(path), {
+          ...options,
+          headers,
+        });
+      }
+    } catch (err) {
+      console.error("Retry flow exception:", err);
+    }
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
