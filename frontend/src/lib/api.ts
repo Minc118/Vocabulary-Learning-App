@@ -1,11 +1,20 @@
 export type { VocabularyWord } from './types';
 import type { VocabularyWord } from './types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5001';
 import { supabase } from './supabase';
 
+const isProduction = import.meta.env.PROD;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+function getApiBaseUrl() {
+  if (isProduction && !API_BASE_URL) {
+    throw new Error('Backend API URL is not configured.');
+  }
+  return API_BASE_URL || 'http://127.0.0.1:5001';
+}
+
 function buildApiUrl(path: string) {
-  return `${API_BASE_URL.replace(/\/$/, '')}${path}`;
+  const baseUrl = getApiBaseUrl();
+  return `${baseUrl.replace(/\/$/, '')}${path}`;
 }
 
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {

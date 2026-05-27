@@ -16,7 +16,14 @@ from routes.export import export_bp
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    
+    # Secure CORS configuration using FRONTEND_ORIGIN or fallback whitelists
+    frontend_origin = os.getenv("FRONTEND_ORIGIN")
+    allowed_origins = ["http://localhost:5173", "https://voca118.vercel.app"]
+    if frontend_origin:
+        allowed_origins.append(frontend_origin)
+        
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
     @app.get("/api/health")
     def health_check():

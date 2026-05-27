@@ -10,7 +10,6 @@ COPY . .
 EXPOSE 5001
 
 ENV FLASK_HOST=0.0.0.0
-ENV FLASK_PORT=5001
-ENV FLASK_DEBUG=true
+ENV FLASK_DEBUG=false
 
-CMD ["python", "app.py"]
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 0 "app:app"
