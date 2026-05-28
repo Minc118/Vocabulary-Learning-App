@@ -3,6 +3,10 @@ from services.ai_service import analyze_text_for_words, extract_text_from_file, 
 
 import_bp = Blueprint('import_text', __name__)
 
+def is_quota_error(e):
+    err_str = str(e).lower()
+    return "429" in err_str or "quota" in err_str or "rate limit" in err_str or "resource_exhausted" in err_str or "resource exhausted" in err_str
+
 @import_bp.route('/analyze', methods=['POST'])
 def analyze():
     data = request.json
@@ -20,7 +24,11 @@ def analyze():
         candidates = analyze_text_for_words(text, language, level, goal, count, native_language)
         return jsonify({"candidates": candidates}), 200
     except Exception as e:
-        return jsonify({"message": str(e)}), 500
+        if is_quota_error(e):
+            return jsonify({
+                "message": "AI text analysis is temporarily unavailable. Please try again later. You can still add words manually."
+            }), 429
+        return jsonify({"message": "AI service is temporarily unavailable. Please try again later."}), 500
 
 @import_bp.route('/extract-text', methods=['POST'])
 def extract_text():
@@ -35,7 +43,11 @@ def extract_text():
         text = extract_text_from_file(file_data, mime_type)
         return jsonify({"text": text}), 200
     except Exception as e:
-        return jsonify({"message": str(e)}), 500
+        if is_quota_error(e):
+            return jsonify({
+                "message": "AI document extraction is temporarily unavailable. Please try again later."
+            }), 429
+        return jsonify({"message": "AI service is temporarily unavailable. Please try again later."}), 500
 
 @import_bp.route('/check-typo', methods=['POST'])
 def verify_typo():
@@ -50,4 +62,8 @@ def verify_typo():
         result = check_typo(text, typed_word)
         return jsonify(result), 200
     except Exception as e:
-        return jsonify({"message": str(e)}), 500
+        if is_quota_error(e):
+            return jsonify({
+                "message": "AI spelling assistant is temporarily unavailable. Please try again later."
+            }), 429
+        return jsonify({"message": "AI service is temporarily unavailable. Please try again later."}), 500

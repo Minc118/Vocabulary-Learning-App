@@ -65,12 +65,19 @@ export function ImportStep3() {
           setEnrichedCount(enriched.length);
           setIsEnriching(false);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Bulk enrichment failed", err);
         if (isMounted) {
           // Fallback to original
           setWords(initialWords);
           setIsEnriching(false);
+          
+          const errMsg = err?.message || '';
+          if (errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('rate limit') || errMsg.includes('429') || errMsg.toLowerCase().includes('temporarily unavailable')) {
+            setError('AI enrichment is temporarily unavailable. You can still save the words manually, or try again later.');
+          } else {
+            setError('AI enrichment failed. You can still save the words manually.');
+          }
         }
       }
     };

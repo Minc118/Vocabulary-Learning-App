@@ -46,7 +46,11 @@ export function AddWord() {
       if (result.ipa && !ipa) setIpa(result.ipa);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'AI Enrichment failed';
-      setError(`${msg}. You can still save the word manually without AI enrichment by clicking "Save Word" below.`);
+      if (msg.includes('manually') || msg.includes('temporarily unavailable')) {
+        setError(msg);
+      } else {
+        setError(`${msg}. You can still save the word manually without AI enrichment by clicking "Save Word" below.`);
+      }
     } finally {
       setIsGenerating(false);
     }
