@@ -70,6 +70,7 @@ def create_word():
         collection_id = resolve_collection_id(collection_id_raw, g.user_id)
         insert_data = {
             "word": data.get("word"),
+            "ipa": data.get("ipa"),
             "translation": data.get("translation"),
             "pos": data.get("pos"),
             "language": data.get("language", "English"),
@@ -125,7 +126,7 @@ def update_word(word_id):
     data = request.json
     try:
         update_data = {}
-        for key in ["word", "translation", "pos", "language", "definition", "source", "mastery"]:
+        for key in ["word", "ipa", "translation", "pos", "language", "definition", "source", "mastery"]:
             if key in data:
                 update_data[key] = data[key]
                 

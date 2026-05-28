@@ -1,8 +1,18 @@
 import { ArrowLeft, Edit2, Trash2, Plus, MoreVertical, Clock, Loader2, FolderOpen, Volume2 } from 'lucide-react';
 import { useNavigate, useLocation, useParams } from "react-router";
 import { useEffect, useState } from 'react';
-import { fetchWordsByCollection, type VocabularyWord } from '../../lib/api';
+import { fetchWordsByCollection, deleteCollection, type VocabularyWord } from '../../lib/api';
 import { speakWord } from '../../lib/speech';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '../components/ui/alert-dialog';
 
 export function CollectionDetail() {
   const navigate = useNavigate();
@@ -15,6 +25,30 @@ export function CollectionDetail() {
   const [words, setWords] = useState<VocabularyWord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Dialog state for deletion
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!collectionId) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteCollection(collectionId);
+      setIsDeleteDialogOpen(false);
+      navigate('/collections');
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete collection');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!collectionId) {
@@ -78,7 +112,11 @@ export function CollectionDetail() {
             <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent transition-colors">
               <Edit2 className="w-4 h-4" strokeWidth={1.5} />
             </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-destructive hover:text-destructive-foreground transition-colors">
+            <button 
+              onClick={handleDeleteClick}
+              disabled={isDeleting || isLoading}
+              className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50"
+            >
               <Trash2 className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </div>
@@ -210,6 +248,62 @@ export function CollectionDetail() {
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+            <AlertDialogDescription>
+              {words.length > 0 ? (
+                <>
+                  The collection <strong className="font-semibold text-foreground">"{collection.name}"</strong> contains <strong className="font-semibold text-foreground">{words.length} words</strong>. 
+                  <br />
+                  <span className="text-destructive font-medium mt-2 block">
+                    Please move or remove the words from this collection before deleting it.
+                  </span>
+                </>
+              ) : (
+                <>
+                  Are you sure you want to delete the collection <strong className="font-semibold text-foreground">"{collection.name}"</strong>? This action cannot be undone.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          {deleteError && (
+            <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-[12px] text-destructive animate-in fade-in-50 duration-200">
+              {deleteError}
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            {words.length > 0 ? (
+              <button
+                onClick={() => setIsDeleteDialogOpen(false)}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-[13px] font-medium cursor-pointer"
+              >
+                Okay
+              </button>
+            ) : (
+              <>
+                <AlertDialogCancel disabled={isDeleting} onClick={() => setIsDeleteDialogOpen(false)} className="cursor-pointer">
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={isDeleting}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDeleteConfirm();
+                  }}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
+                >
+                  {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : 'Delete'}
+                </AlertDialogAction>
+              </>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

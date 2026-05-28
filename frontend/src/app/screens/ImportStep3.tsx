@@ -105,6 +105,7 @@ export function ImportStep3() {
         
         await createWord({
           word: word.word,
+          ipa: word.ipa,
           translation: word.translation || '',
           language,
           pos: word.pos || 'Noun',
@@ -272,7 +273,10 @@ export function ImportStep3() {
                 <div className="flex items-center gap-4">
                   <Sparkles className="w-4 h-4 text-primary" strokeWidth={1.5} />
                   <div className="text-left">
-                    <div className="font-medium text-[15px] mb-0.5">{item.word}</div>
+                    <div className="font-medium text-[15px] mb-0.5 flex items-baseline gap-2">
+                      <span>{item.word}</span>
+                      {item.ipa && <span className="text-[12.5px] font-mono text-muted-foreground font-normal">/{item.ipa.replace(/^\/|\/$/g, '')}/</span>}
+                    </div>
                     <div className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary uppercase mb-1">
                       {item.pos || 'Noun'}
                     </div>
@@ -288,6 +292,12 @@ export function ImportStep3() {
 
               {expanded.has(i) && (
                 <div className="px-6 pb-5 pt-2 border-t border-border space-y-4">
+                  {item.ipa && (
+                    <div>
+                      <div className="text-[12px] text-muted-foreground mb-1.5 uppercase tracking-wide">IPA Transcription</div>
+                      <div className="text-[14.5px] font-mono leading-relaxed text-foreground">/{item.ipa.replace(/^\/|\/$/g, '')}/</div>
+                    </div>
+                  )}
                   <div>
                     <div className="text-[12px] text-muted-foreground mb-1.5 uppercase tracking-wide">Definition</div>
                     <div className="text-[14px] leading-relaxed">{item.definition || 'No definition available.'}</div>

@@ -153,8 +153,16 @@ export async function checkTypo(text: string, typed_word: string): Promise<{ is_
 
 // ================= Review System =================
 
-export async function fetchReviewQueue(limit: number = 20): Promise<VocabularyWord[]> {
-  const result = await fetchApi<{ items: VocabularyWord[]; count: number }>(`/api/review/queue?limit=${limit}`);
+export async function fetchReviewQueue(limit: number = 20, collectionId: string = 'all'): Promise<VocabularyWord[]> {
+  let clampedLimit = Math.floor(limit);
+  if (isNaN(clampedLimit) || clampedLimit < 1) {
+    clampedLimit = 20;
+  } else if (clampedLimit > 200) {
+    clampedLimit = 200;
+  }
+  
+  const encodedCollectionId = encodeURIComponent(collectionId);
+  const result = await fetchApi<{ items: VocabularyWord[]; count: number }>(`/api/review/queue?limit=${clampedLimit}&collection_id=${encodedCollectionId}`);
   return result.items;
 }
 
@@ -233,6 +241,12 @@ export async function createCollection(data: Partial<Collection>): Promise<Colle
   });
 }
 
+export async function deleteCollection(collectionId: string): Promise<void> {
+  return fetchApi<void>(`/api/collections/${collectionId}`, {
+    method: 'DELETE',
+  });
+}
+
 // ================= Tags =================
 
 export interface Tag {
@@ -269,4 +283,36 @@ export async function exportReviewProgressData(): Promise<any[]> {
 
 export async function exportAllData(): Promise<{ vocabulary: any[]; collections: any[] }> {
   return fetchApi<{ vocabulary: any[]; collections: any[] }>('/api/export/all');
+}
+
+export async function exportVocabularyCSV(): Promise<string> {
+  const headers: Record<string, string> = {};
+  const token = await getFreshToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  let response = await fetch(buildApiUrl('/api/export/vocabulary?format=csv'), {
+    headers,
+  });
+
+  if (response.status === 401 && supabase) {
+    try {
+      const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+      if (refreshedSession?.access_token) {
+        headers['Authorization'] = `Bearer ${refreshedSession.access_token}`;
+        response = await fetch(buildApiUrl('/api/export/vocabulary?format=csv'), {
+          headers,
+        });
+      }
+    } catch (err) {
+      console.error("Retry flow exception in CSV export:", err);
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error('Failed to export CSV data');
+  }
+
+  return response.text();
 }

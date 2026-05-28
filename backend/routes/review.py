@@ -6,13 +6,29 @@ review_bp = Blueprint('review', __name__)
 
 @review_bp.route('/queue', methods=['GET'])
 def get_queue():
-    limit = request.args.get('limit', 20, type=int)
+    limit_raw = request.args.get('limit', '20')
+    try:
+        limit = int(float(limit_raw))
+    except (ValueError, TypeError):
+        limit = 20
+        
+    # Clamp limit: minimum 1, maximum 200
+    if limit < 1:
+        limit = 20
+    elif limit > 200:
+        limit = 200
+        
+    collection_id = request.args.get('collection_id')
     supabase = get_supabase()
     
     # Get words where next_review is null or in the past
     try:
         now_str = datetime.utcnow().isoformat()
-        response = supabase.table('words').select('*').or_(f"next_review.is.null,next_review.lte.{now_str}").limit(limit).execute()
+        query = supabase.table('words').select('*').or_(f"next_review.is.null,next_review.lte.{now_str}")
+        if collection_id and collection_id != "all":
+            query = query.eq('collection_id', collection_id)
+            
+        response = query.limit(limit).execute()
         return jsonify({"items": response.data, "count": len(response.data)}), 200
     except Exception as e:
         return jsonify({"message": str(e)}), 500

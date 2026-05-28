@@ -33,6 +33,35 @@ export function VocabularyList() {
   const [words, setWords] = useState<VocabularyWord[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Active filter states
+  const [selectedLanguage, setSelectedLanguage] = useState('All');
+  const [selectedTag, setSelectedTag] = useState('All');
+  const [selectedMastery, setSelectedMastery] = useState('All');
+
+  // Compile unique lists for select dropdowns
+  const availableLanguages = Array.from(new Set(words.map(w => w.language).filter(Boolean))).sort();
+  const availableTags = Array.from(new Set(words.flatMap(w => w.tags || []).filter(Boolean))).sort();
+
+  // Perform client-side filtering
+  const filteredWords = words.filter(item => {
+    if (selectedLanguage !== 'All' && item.language !== selectedLanguage) {
+      return false;
+    }
+    if (selectedTag !== 'All' && !(item.tags || []).includes(selectedTag)) {
+      return false;
+    }
+    if (selectedMastery !== 'All') {
+      const itemMastery = item.mastery || 'New';
+      if (selectedMastery === 'New' && itemMastery !== 'New') {
+        return false;
+      }
+      if (selectedMastery !== 'New' && itemMastery !== selectedMastery) {
+        return false;
+      }
+    }
+    return true;
+  });
+
   // States for three-dot menu and delete confirmation
   const [wordToDelete, setWordToDelete] = useState<VocabularyWord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -143,25 +172,74 @@ export function VocabularyList() {
       </div>
 
       {/* Filters */}
-      {/* 这些筛选按钮目前还是 UI 占位。
-          也就是说：作业演示里它们主要展示界面结构，
-          还没有真正去对后端发筛选请求。 */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 flex items-center gap-3">
-          <button className="h-9 px-4 rounded-lg border border-border bg-card hover:bg-accent transition-colors text-[13px] flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5" strokeWidth={1.5} />
-            Language: All
-          </button>
-          <button className="h-9 px-4 rounded-lg border border-border bg-card hover:bg-accent transition-colors text-[13px] flex items-center gap-2">
-            <Tag className="w-3.5 h-3.5" strokeWidth={1.5} />
-            Tags: All
-          </button>
-          <button className="h-9 px-4 rounded-lg border border-border bg-card hover:bg-accent transition-colors text-[13px] flex items-center gap-2">
-            <SlidersHorizontal className="w-3.5 h-3.5" strokeWidth={1.5} />
-            Mastery: All
-          </button>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex-1 flex items-center gap-3 flex-wrap">
+          {/* Language Filter */}
+          <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 text-[13px]">
+            <Filter className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+            <span className="text-muted-foreground">Language:</span>
+            <select
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="bg-transparent border-none outline-none cursor-pointer pr-1 font-medium text-foreground dark:bg-card"
+            >
+              <option value="All">All</option>
+              {availableLanguages.map(lang => (
+                <option key={lang} value={lang}>{lang}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tags Filter */}
+          <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 text-[13px]">
+            <Tag className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+            <span className="text-muted-foreground">Tag:</span>
+            <select
+              value={selectedTag}
+              onChange={(e) => setSelectedTag(e.target.value)}
+              className="bg-transparent border-none outline-none cursor-pointer pr-1 font-medium text-foreground dark:bg-card"
+            >
+              <option value="All">All</option>
+              {availableTags.map(tag => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Mastery Filter */}
+          <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 text-[13px]">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+            <span className="text-muted-foreground">Mastery:</span>
+            <select
+              value={selectedMastery}
+              onChange={(e) => setSelectedMastery(e.target.value)}
+              className="bg-transparent border-none outline-none cursor-pointer pr-1 font-medium text-foreground dark:bg-card"
+            >
+              <option value="All">All</option>
+              <option value="New">New</option>
+              <option value="Learning">Learning</option>
+              <option value="Familiar">Familiar</option>
+              <option value="Mastered">Mastered</option>
+            </select>
+          </div>
+
+          {/* Reset Button */}
+          {(selectedLanguage !== 'All' || selectedTag !== 'All' || selectedMastery !== 'All') && (
+            <button
+              onClick={() => {
+                setSelectedLanguage('All');
+                setSelectedTag('All');
+                setSelectedMastery('All');
+              }}
+              className="h-8 px-3 rounded bg-accent hover:bg-accent/80 text-[12px] font-medium transition-colors cursor-pointer text-accent-foreground"
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
-        <div className="text-[13px] text-muted-foreground">{words.length} words</div>
+        <div className="text-[13px] text-muted-foreground">
+          {filteredWords.length} of {words.length} words
+        </div>
       </div>
 
       {loadError && (
@@ -200,7 +278,7 @@ export function VocabularyList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {words.map((item) => (
+            {filteredWords.map((item) => (
               <tr
                 key={item.id}
                 // 点击一行后，前端把该词对象作为页面参数带去详情页。
@@ -222,7 +300,9 @@ export function VocabularyList() {
                       <Volume2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>
                   </div>
-                  <div className="text-[12px] text-muted-foreground">{item.pos}</div>
+                  <div className="text-[12px] text-muted-foreground">
+                    {item.pos}{item.ipa ? ` • /${item.ipa.replace(/^\/|\/$/g, '')}/` : ''}
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-[14px]">{item.translation}</td>
                 <td className="px-6 py-4 text-[14px]">{item.language}</td>
@@ -297,11 +377,12 @@ export function VocabularyList() {
                 </td>
               </tr>
             ))}
-            {!loadError && words.length === 0 && (
-              // 空态提示：常见于“请求尚未返回”或“后端返回空列表”。
+            {!loadError && filteredWords.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-6 py-10 text-center text-[14px] text-muted-foreground">
-                  Waiting for data from the Flask service...
+                  {words.length === 0 
+                    ? "Waiting for data from the Flask service..." 
+                    : "No words match the selected filters."}
                 </td>
               </tr>
             )}

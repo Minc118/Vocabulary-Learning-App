@@ -6,7 +6,8 @@ import {
   exportVocabularyData, 
   exportCollectionsData, 
   exportReviewProgressData, 
-  exportAllData 
+  exportAllData,
+  exportVocabularyCSV 
 } from '../../lib/api';
 import {
   AlertDialog,
@@ -28,7 +29,7 @@ export function Settings() {
   const [emailAddress, setEmailAddress] = useState('');
 
   // Data management states
-  const [isExporting, setIsExporting] = useState<'vocabulary' | 'collections' | 'review' | 'all' | null>(null);
+  const [isExporting, setIsExporting] = useState<'vocabulary' | 'vocabulary_csv' | 'collections' | 'review' | 'all' | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showComingSoon, setShowComingSoon] = useState(false);
 
@@ -69,29 +70,51 @@ export function Settings() {
     URL.revokeObjectURL(url);
   };
 
-  const handleExport = async (type: 'vocabulary' | 'collections' | 'review' | 'all') => {
+  const downloadCSV = (content: string, defaultFilename: string) => {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', url);
+    
+    const today = new Date().toISOString().split('T')[0];
+    const filename = defaultFilename.replace('YYYY-MM-DD', today);
+    downloadAnchor.setAttribute('download', filename);
+    
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExport = async (type: 'vocabulary' | 'vocabulary_csv' | 'collections' | 'review' | 'all') => {
     setIsExporting(type);
     setMessage(null);
     try {
-      let data: any;
       let filename = '';
       
       if (type === 'vocabulary') {
-        data = await exportVocabularyData();
+        const data = await exportVocabularyData();
         filename = 'voca-vocabulary-export-YYYY-MM-DD.json';
+        downloadJSON(data, filename);
+      } else if (type === 'vocabulary_csv') {
+        const csvContent = await exportVocabularyCSV();
+        filename = 'voca_words_export_YYYY-MM-DD.csv';
+        downloadCSV(csvContent, filename);
       } else if (type === 'collections') {
-        data = await exportCollectionsData();
+        const data = await exportCollectionsData();
         filename = 'voca-collections-export-YYYY-MM-DD.json';
+        downloadJSON(data, filename);
       } else if (type === 'review') {
-        data = await exportReviewProgressData();
+        const data = await exportReviewProgressData();
         filename = 'voca-review-export-YYYY-MM-DD.json';
+        downloadJSON(data, filename);
       } else if (type === 'all') {
-        data = await exportAllData();
+        const data = await exportAllData();
         filename = 'voca-full-export-YYYY-MM-DD.json';
+        downloadJSON(data, filename);
       }
       
-      downloadJSON(data, filename);
-      setMessage({ type: 'success', text: `Successfully exported ${type} data!` });
+      setMessage({ type: 'success', text: `Successfully exported ${type === 'vocabulary_csv' ? 'vocabulary (CSV)' : type} data!` });
     } catch (err) {
       setMessage({ 
         type: 'error', 
@@ -306,6 +329,19 @@ export function Settings() {
                   <div className="text-[11.5px] text-muted-foreground mt-0.5">Complete words list & relations</div>
                 </div>
                 {isExporting === 'vocabulary' && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+              </button>
+
+              <button 
+                type="button"
+                disabled={isExporting !== null}
+                onClick={() => handleExport('vocabulary_csv')}
+                className="h-16 px-4 border border-border rounded-xl hover:bg-accent transition-colors text-[14px] font-medium flex items-center justify-between cursor-pointer disabled:opacity-50"
+              >
+                <div className="text-left">
+                  <div className="font-medium text-foreground">Export Vocabulary (CSV)</div>
+                  <div className="text-[11.5px] text-muted-foreground mt-0.5">CSV spreadsheet for Excel/Sheets</div>
+                </div>
+                {isExporting === 'vocabulary_csv' && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
               </button>
 
               <button 

@@ -11,6 +11,19 @@ def init_genai():
 
 is_ai_ready = init_genai()
 
+def sanitize_ipa(ipa):
+    if ipa is None:
+        return ""
+    ipa = str(ipa).strip()
+    if not ipa:
+        return ""
+    # Normalize slashes
+    if not ipa.startswith("/"):
+        ipa = f"/{ipa}"
+    if not ipa.endswith("/"):
+        ipa = f"{ipa}/"
+    return ipa
+
 def enrich_word(word: str, language: str = "English", context: str = "", native_language: str = "Chinese") -> dict:
     if not is_ai_ready:
         raise Exception("AI service not configured")
@@ -27,6 +40,7 @@ def enrich_word(word: str, language: str = "English", context: str = "", native_
     Expected JSON schema:
     {{
       "word": "{word}",
+      "ipa": "IPA phonetic transcription for English words, e.g., /ˈtrɪɡər/ (optional, empty string if unavailable or not English)",
       "translation": "Primary translation of the word in {native_language}",
       "pos": "Part of speech (e.g., noun, verb, adjective)",
       "definition": "A clear, concise definition in {native_language}",
@@ -44,6 +58,14 @@ def enrich_word(word: str, language: str = "English", context: str = "", native_
       "synonyms": ["synonym1 in {language}", "synonym2 in {language}"],
       "relatedWords": ["related1 in {language}", "related2 in {language}"]
     }}
+
+    Prompt rules:
+    - For each English vocabulary item, include an IPA phonetic transcription in the field "ipa".
+    - Use standard IPA notation.
+    - Wrap IPA in slashes, for example /ˈtrɪɡər/.
+    - Choose the pronunciation that matches the meaning and part of speech in context.
+    - If uncertain, return an empty string.
+    - Do not omit the "ipa" field.
     """
     
     response = model.generate_content(prompt)
@@ -56,7 +78,9 @@ def enrich_word(word: str, language: str = "English", context: str = "", native_
         text = text[:-3]
         
     try:
-        return json.loads(text.strip())
+        res = json.loads(text.strip())
+        res["ipa"] = sanitize_ipa(res.get("ipa", ""))
+        return res
     except Exception as e:
         print(f"Failed to parse AI response: {text}")
         raise Exception("Failed to parse AI response into JSON")
@@ -79,6 +103,7 @@ def bulk_enrich_words(words: list, language: str = "English", native_language: s
     Expected JSON schema for EACH object in the array:
     {{
       "word": "The original word",
+      "ipa": "IPA phonetic transcription for English words, e.g., /ˈtrɪɡər/ (optional, empty string if unavailable or not English)",
       "translation": "Primary translation of the word in {native_language}",
       "pos": "Part of speech (e.g., noun, verb, adjective)",
       "definition": "A clear, concise definition in {native_language}",
@@ -96,6 +121,14 @@ def bulk_enrich_words(words: list, language: str = "English", native_language: s
       "synonyms": ["synonym1 in {language}", "synonym2 in {language}"],
       "relatedWords": ["related1 in {language}", "related2 in {language}"]
     }}
+
+    Prompt rules:
+    - For each English vocabulary item, include an IPA phonetic transcription in the field "ipa".
+    - Use standard IPA notation.
+    - Wrap IPA in slashes, for example /ˈtrɪɡər/.
+    - Choose the pronunciation that matches the meaning and part of speech in context.
+    - If uncertain, return an empty string.
+    - Do not omit the "ipa" field.
     """
     
     response = model.generate_content(prompt)
@@ -107,7 +140,11 @@ def bulk_enrich_words(words: list, language: str = "English", native_language: s
         text = text[:-3]
         
     try:
-        return json.loads(text.strip())
+        items = json.loads(text.strip())
+        if isinstance(items, list):
+            for item in items:
+                item["ipa"] = sanitize_ipa(item.get("ipa", ""))
+        return items
     except Exception as e:
         print(f"Failed to parse bulk AI response: {text}")
         raise Exception("Failed to parse AI response into JSON")
@@ -132,11 +169,20 @@ def analyze_text_for_words(text: str, target_language: str = "English", level: s
     [
       {{
         "word": "extracted word",
+        "ipa": "IPA phonetic transcription for English words, e.g., /ˈtrɪɡər/ (optional, empty string if unavailable or not English)",
         "translation": "translation in {native_language}",
         "pos": "part of speech",
         "context": "the sentence from the text where it appears"
       }}
     ]
+
+    Prompt rules:
+    - For each English vocabulary item, include an IPA phonetic transcription in the field "ipa".
+    - Use standard IPA notation.
+    - Wrap IPA in slashes, for example /ˈtrɪɡər/.
+    - Choose the pronunciation that matches the meaning and part of speech in context.
+    - If uncertain, return an empty string.
+    - Do not omit the "ipa" field.
     """
     
     response = model.generate_content(prompt)
@@ -148,7 +194,11 @@ def analyze_text_for_words(text: str, target_language: str = "English", level: s
         text_res = text_res[:-3]
         
     try:
-        return json.loads(text_res.strip())
+        items = json.loads(text_res.strip())
+        if isinstance(items, list):
+            for item in items:
+                item["ipa"] = sanitize_ipa(item.get("ipa", ""))
+        return items
     except Exception as e:
         print(f"Failed to parse AI response: {text_res}")
         raise Exception("Failed to parse AI response into JSON")

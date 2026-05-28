@@ -1,6 +1,7 @@
 export interface VocabularyWord {
   id: number;
   word: string;
+  ipa?: string;
   translation: string;
   pos: string;
   language: string;

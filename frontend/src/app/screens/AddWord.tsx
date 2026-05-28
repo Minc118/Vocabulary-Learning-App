@@ -9,6 +9,7 @@ export function AddWord() {
   const location = useLocation();
   
   const [word, setWord] = useState('');
+  const [ipa, setIpa] = useState('');
   const [translation, setTranslation] = useState('');
   const [language, setLanguage] = useState('English');
   const [pos, setPos] = useState('Noun');
@@ -42,6 +43,7 @@ export function AddWord() {
       setAiData(result);
       if (result.translation && !translation) setTranslation(result.translation);
       if (result.pos && pos === 'Noun') setPos(result.pos);
+      if (result.ipa && !ipa) setIpa(result.ipa);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'AI Enrichment failed';
       setError(`${msg}. You can still save the word manually without AI enrichment by clicking "Save Word" below.`);
@@ -62,6 +64,7 @@ export function AddWord() {
     try {
       await createWord({
         word,
+        ipa,
         translation,
         language,
         pos,
@@ -130,6 +133,17 @@ export function AddWord() {
                     value={word}
                     onChange={(e) => setWord(e.target.value)}
                     placeholder="Enter word..."
+                    className="w-full h-10 px-3 bg-input-background border border-border rounded-lg text-[14px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[13px] mb-2">Phonetic / IPA (Optional)</label>
+                  <input
+                    type="text"
+                    value={ipa}
+                    onChange={(e) => setIpa(e.target.value)}
+                    placeholder="e.g. /ˈtrɪɡər/"
                     className="w-full h-10 px-3 bg-input-background border border-border rounded-lg text-[14px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
                   />
                 </div>
@@ -290,6 +304,13 @@ export function AddWord() {
                   </div>
 
                   <div className="space-y-5">
+                    {aiData.ipa && (
+                      <div>
+                        <div className="text-[13px] text-muted-foreground mb-2">IPA Transcription</div>
+                        <div className="text-[15px] font-mono text-foreground">{aiData.ipa}</div>
+                      </div>
+                    )}
+
                     {aiData.definition && (
                       <div>
                         <div className="text-[13px] text-muted-foreground mb-2">Definition</div>

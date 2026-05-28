@@ -1,7 +1,7 @@
 import { RotateCcw, TrendingUp, Clock, Calendar, Loader2 } from 'lucide-react';
 import { useNavigate } from "react-router";
 import { useState, useEffect } from 'react';
-import { fetchReviewQueue, type VocabularyWord } from '../../lib/api';
+import { fetchReviewQueue, fetchCollections, type VocabularyWord, type Collection } from '../../lib/api';
 
 export function ReviewHub() {
   const navigate = useNavigate();
@@ -12,17 +12,26 @@ export function ReviewHub() {
     multipleChoice: true,
     spelling: true
   });
+  const [wordCountMode, setWordCountMode] = useState<'preset' | 'custom'>('preset');
+  const [collectionId, setCollectionId] = useState<string>('all');
+  const [wordCount, setWordCount] = useState<number>(20);
+  const [customWordCount, setCustomWordCount] = useState<string>('20');
+  const [collections, setCollections] = useState<Collection[]>([]);
 
   const activeModes = Object.entries(selectedModes).filter(([_, v]) => v).map(([k]) => k);
 
   useEffect(() => {
-    fetchReviewQueue(100)
-      .then(words => {
+    Promise.all([
+      fetchReviewQueue(100, collectionId),
+      fetchCollections()
+    ])
+      .then(([words, cols]) => {
         setDueCount(words.length);
+        setCollections(cols);
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [collectionId]);
 
   return (
     <div className="p-8 space-y-6">
@@ -68,12 +77,91 @@ export function ReviewHub() {
         </div>
 
         <button
-          onClick={() => navigate('/review/session', { state: { activeModes } })}
+          onClick={() => navigate('/review/session', { state: { activeModes, collectionId, limit: wordCount } })}
           disabled={dueCount === 0 || isLoading || activeModes.length === 0}
-          className="w-full h-12 bg-white text-primary rounded-lg hover:bg-white/95 transition-colors font-medium text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 bg-white text-primary rounded-lg hover:bg-white/95 transition-colors font-medium text-[15px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {dueCount === 0 ? "You're all caught up!" : "Start Review Session"}
         </button>
+      </div>
+
+      {/* Review Options */}
+      <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+        <h3 className="font-medium text-[15px]">Session Settings</h3>
+        
+        <div className="grid grid-cols-2 gap-6">
+          {/* Collection Filter */}
+          <div className="space-y-2">
+            <label className="block text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Collection</label>
+            <select
+              value={collectionId}
+              onChange={(e) => {
+                setIsLoading(true);
+                setCollectionId(e.target.value);
+              }}
+              className="w-full h-10 bg-background border border-input rounded-lg px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="all">All Collections</option>
+              {collections.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Word Limit Selector */}
+          <div className="space-y-2">
+            <label className="block text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Word Limit</label>
+            <div className="flex gap-2">
+              <select
+                value={wordCountMode === 'custom' ? 'custom' : wordCount.toString()}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'custom') {
+                    setWordCountMode('custom');
+                    const parsed = parseInt(customWordCount, 10);
+                    if (!isNaN(parsed) && parsed >= 1 && parsed <= 200) {
+                      setWordCount(parsed);
+                    } else {
+                      setWordCount(20);
+                    }
+                  } else {
+                    setWordCountMode('preset');
+                    const num = parseInt(val, 10);
+                    setWordCount(num);
+                    setCustomWordCount(val);
+                  }
+                }}
+                className="w-1/2 h-10 bg-background border border-input rounded-lg px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="10">10 Words</option>
+                <option value="20">20 Words</option>
+                <option value="50">50 Words</option>
+                <option value="100">100 Words</option>
+                <option value="custom">Custom...</option>
+              </select>
+              
+              {wordCountMode === 'custom' && (
+                <input
+                  type="number"
+                  min="1"
+                  max="200"
+                  value={customWordCount}
+                  onChange={(e) => {
+                    setCustomWordCount(e.target.value);
+                    const parsed = parseInt(e.target.value, 10);
+                    if (!isNaN(parsed) && parsed >= 1 && parsed <= 200) {
+                      setWordCount(parsed);
+                    } else {
+                      setWordCount(20); // Safe fallback default
+                    }
+                  }}
+                  className="w-1/2 h-10 bg-background border border-input rounded-lg px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="1-200"
+                />
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}

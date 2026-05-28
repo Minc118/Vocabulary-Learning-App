@@ -18,11 +18,12 @@ print("[APP_VERSION] supabase-config-diag-v2", flush=True)
 def create_app() -> Flask:
     app = Flask(__name__)
     
-    # Secure CORS configuration using FRONTEND_ORIGIN or fallback whitelists
-    frontend_origin = os.getenv("FRONTEND_ORIGIN")
-    allowed_origins = ["http://localhost:5173", "https://voca118.vercel.app"]
-    if frontend_origin:
-        allowed_origins.append(frontend_origin)
+    # Secure CORS configuration using FRONTEND_ORIGINS/FRONTEND_ORIGIN or fallback whitelists
+    frontend_origins = os.getenv("FRONTEND_ORIGINS") or os.getenv("FRONTEND_ORIGIN")
+    allowed_origins = ["http://localhost:5173", "http://localhost:3000", "https://voca118.vercel.app"]
+    if frontend_origins:
+        origins_list = [orig.strip() for orig in frontend_origins.split(",") if orig.strip()]
+        allowed_origins.extend(origins_list)
         
     CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 

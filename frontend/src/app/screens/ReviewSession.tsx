@@ -1,4 +1,4 @@
-import { X, Loader2, Volume2 } from 'lucide-react';
+import { X, Loader2, Volume2, Clock } from 'lucide-react';
 import { useNavigate } from "react-router";
 import { useState, useEffect } from 'react';
 import { fetchReviewQueue, submitReviewAnswer, fetchWordById, type VocabularyWord } from '../../lib/api';
@@ -12,6 +12,8 @@ export function ReviewSession() {
   
   const location = useLocation();
   const activeModes: ReviewMode[] = location.state?.activeModes || ['flashcard'];
+  const limit: number = location.state?.limit || 20;
+  const collectionId: string = location.state?.collectionId || 'all';
 
   const [queue, setQueue] = useState<VocabularyWord[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -22,6 +24,26 @@ export function ReviewSession() {
 
   // Detailed word loaded on-demand
   const [detailedWord, setDetailedWord] = useState<VocabularyWord | null>(null);
+
+  // Session stats tracking
+  const [correctCount, setCorrectCount] = useState(0);
+  const [incorrectCount, setIncorrectCount] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isSessionActive, setIsSessionActive] = useState(true);
+
+  useEffect(() => {
+    if (!isSessionActive) return;
+    const timer = setInterval(() => {
+      setElapsedSeconds(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isSessionActive]);
+
+  const formatTime = (totalSecs: number) => {
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Multiple Choice learning feedback state
   const [selectedWrongOption, setSelectedWrongOption] = useState<string | null>(null);
@@ -71,7 +93,7 @@ export function ReviewSession() {
   };
 
   useEffect(() => {
-    fetchReviewQueue(20)
+    fetchReviewQueue(limit, collectionId)
       .then(words => {
         setQueue(words);
         if (words.length > 0) initCard(0, words);
@@ -81,11 +103,18 @@ export function ReviewSession() {
         setError(err.message || 'Failed to load review queue');
         setIsLoading(false);
       });
-  }, []);
+  }, [limit, collectionId]);
 
   const handleAnswer = async (answer: 'again' | 'hard' | 'good' | 'easy') => {
     const currentWord = queue[currentIndex];
     if (!currentWord) return;
+
+    const isCorrect = answer === 'good' || answer === 'easy';
+    if (isCorrect) {
+      setCorrectCount(prev => prev + 1);
+    } else {
+      setIncorrectCount(prev => prev + 1);
+    }
 
     setIsSubmitting(true);
     try {
@@ -94,7 +123,21 @@ export function ReviewSession() {
       // Move to next card
       const nextIndex = currentIndex + 1;
       if (nextIndex >= queue.length) {
-        navigate('/review/result', { state: { reviewedCount: queue.length } });
+        setIsSessionActive(false);
+        const finalCorrect = isCorrect ? correctCount + 1 : correctCount;
+        const finalIncorrect = !isCorrect ? incorrectCount + 1 : incorrectCount;
+        const total = finalCorrect + finalIncorrect;
+        const accuracy = total > 0 ? Math.round((finalCorrect / total) * 100) : 100;
+
+        navigate('/review/result', { 
+          state: { 
+            reviewedCount: queue.length,
+            accuracy,
+            elapsedSeconds,
+            correctCount: finalCorrect,
+            incorrectCount: finalIncorrect
+          } 
+        });
       } else {
         setCurrentIndex(nextIndex);
         setRevealed(false);
@@ -156,6 +199,10 @@ export function ReviewSession() {
           <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">
             <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }}></div>
           </div>
+          <div className="text-[14px] text-muted-foreground ml-2 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 animate-pulse text-primary" strokeWidth={1.5} />
+            <span className="font-mono">{formatTime(elapsedSeconds)}</span>
+          </div>
         </div>
         <button
           onClick={() => navigate('/review')}
@@ -188,8 +235,13 @@ export function ReviewSession() {
                         <Volume2 className="w-6 h-6" strokeWidth={1.5} />
                       </button>
                     </div>
+                    {currentWord.ipa && (
+                      <div className="text-[15px] font-mono text-muted-foreground mt-1.5 mb-1">
+                        /{currentWord.ipa.replace(/^\/|\/$/g, '')}/
+                      </div>
+                    )}
                     {currentWord.pos && (
-                      <div className="mt-2.5">
+                      <div className="mt-2">
                         <span className="px-2.5 py-0.5 bg-muted rounded text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
                           {currentWord.pos}
                         </span>
@@ -285,7 +337,7 @@ export function ReviewSession() {
 
               {currentMode === 'spelling' && (
                 <>
-                  <div className="text-[20px] font-medium mb-8 text-left leading-relaxed">
+                  <div className="text-[20px] font-medium mb-8 text-center leading-relaxed">
                     {currentWord.definition || currentWord.translation || "No definition available."}
                   </div>
                   <form 
@@ -342,6 +394,11 @@ export function ReviewSession() {
                     <Volume2 className="w-6 h-6" strokeWidth={1.5} />
                   </button>
                 </div>
+                {displayWord.ipa && (
+                  <div className="text-[15px] font-mono text-muted-foreground -mt-1.5 mb-3">
+                    /{displayWord.ipa.replace(/^\/|\/$/g, '')}/
+                  </div>
+                )}
                 {displayWord.pos && (
                   <div className="mb-3.5">
                     <span className="px-2.5 py-0.5 bg-muted rounded text-[12px] font-medium text-muted-foreground uppercase tracking-wider">

@@ -26,6 +26,7 @@ export function WordDetail() {
   const initialWord: VocabularyWord = {
     id: data?.id ?? '',
     word: '...',
+    ipa: '',
     translation: '...',
     pos: 'noun',
     language: 'English',
@@ -86,6 +87,7 @@ export function WordDetail() {
         if (data.isDirectEditing) {
           setEditForm({
             word: safeResult.word,
+            ipa: safeResult.ipa || '',
             translation: safeResult.translation,
             pos: safeResult.pos,
             language: safeResult.language,
@@ -132,6 +134,7 @@ export function WordDetail() {
   const handleEditClick = () => {
     setEditForm({
       word: word.word,
+      ipa: word.ipa || '',
       translation: word.translation,
       pos: word.pos,
       language: word.language,
@@ -194,6 +197,12 @@ export function WordDetail() {
                         className="text-[30px] font-medium w-full bg-input-background border border-border rounded px-2 focus:outline-none"
                         placeholder="Word"
                       />
+                      <input 
+                        value={editForm.ipa || ''}
+                        onChange={e => setEditForm({ ...editForm, ipa: e.target.value })}
+                        className="text-[14px] font-mono w-full bg-input-background border border-border rounded px-2 py-1 focus:outline-none placeholder:font-sans"
+                        placeholder="IPA / Phonetic (e.g. /ˈtrɪɡər/)"
+                      />
                       <div className="flex gap-2">
                         <input 
                           value={editForm.pos || ''}
@@ -227,6 +236,12 @@ export function WordDetail() {
                           <Volume2 className="w-5.5 h-5.5" strokeWidth={1.5} />
                         </button>
                       </div>
+                      {word.ipa && (
+                        <div className="text-[15px] font-mono text-primary bg-primary/5 border border-primary/10 rounded-md px-2.5 py-0.5 w-fit mt-1.5 mb-3.5 flex items-center gap-1.5">
+                          <span className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted-foreground">IPA:</span>
+                          <span>/{word.ipa.replace(/^\/|\/$/g, '')}/</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mb-3">
                         <span className="px-3 py-1 bg-muted rounded-lg text-[13px] font-medium text-muted-foreground">{word.pos || 'Unknown'}</span>
                         <span className="px-3 py-1 bg-muted rounded-lg text-[13px] text-muted-foreground">{word.language}</span>

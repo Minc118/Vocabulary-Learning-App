@@ -192,8 +192,9 @@ export function ImportStep2() {
                       </div>
 
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
+                        <div className="flex items-center gap-3 mb-1 flex-wrap">
                           <span className="font-medium text-[15px]">{item.word}</span>
+                          {item.ipa && <span className="text-[12.5px] font-mono text-muted-foreground font-normal">/{item.ipa.replace(/^\/|\/$/g, '')}/</span>}
                           <span className="text-[13px] text-muted-foreground">{item.translation}</span>
                           {item.existing && (
                             <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-[11px] font-medium">
