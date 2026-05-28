@@ -1,193 +1,198 @@
-# AI Vocabulary Learning App
+# Voca — AI-Assisted Vocabulary Learning App
 
-An AI-assisted vocabulary learning prototype for turning real reading material into a personal vocabulary system.
+An AI-assisted vocabulary learning web app that helps users turn real reading material into structured vocabulary entries, organize them into collections, and review them with a lightweight spaced repetition workflow.
 
-一个面向真实阅读场景的 AI 辅助词汇学习原型，目标是把阅读中遇到的生词沉淀为可整理、可复习、可追踪的个人词汇系统。
+一个面向真实阅读场景的 AI 辅助词汇学习应用，帮助用户把阅读中遇到的生词快速沉淀为可整理、可复习、可追踪的个人系统化词汇。
 
 ![Voca UI Preview](docs/images/preview.png)
 
-## Overview
+---
 
-This project explores a complete vocabulary learning workflow:
+## 🌐 Live Demo
 
-- capture vocabulary from articles or reading notes
-- organize words by collection, language, tag, and learning status
-- review words through a dedicated practice flow
-- track learning progress with lightweight statistics
-- connect the React frontend to a Flask REST backend for vocabulary data
+* **Frontend App**: [https://voca118.vercel.app](https://voca118.vercel.app)
+* **Backend Service**: Deployed on Google Cloud Run (REST API)
 
-The current version is a portfolio-ready prototype. It contains a polished multi-screen frontend, a small Flask API, and fixed in-memory vocabulary data for local demonstration. Persistence, full CRUD, authentication, and production AI enrichment are planned for later milestones.
+> [!NOTE]
+> **Authentication Scoping**: Secure authentication is fully integrated. To access the dashboard and vocabulary tools, please create a new account or log in via the landing portal. All data is scoped and isolated strictly to your user profile.
 
-## Product Highlights
+---
 
-- **Personal vocabulary workflow**: moves beyond generic word lists and focuses on words collected from real user content.
-- **Multi-step import flow**: models the process of pasting text, selecting candidates, and preparing words for review.
-- **Review experience**: includes review hub, review session, and review result screens.
-- **Collection-first organization**: supports collection detail views and language/category grouping concepts.
-- **Frontend-backend separation**: React fetches vocabulary data from a Flask REST service instead of relying only on local mock data.
-- **Extensible data shape**: each word includes translation, part of speech, examples, collocations, synonyms, related words, source, and review metadata.
+## 🎯 Why I Built This
 
-## Current Screens
+Generic dictionary listings and static word lists often feel disconnected from active learning. When studying a language, the most memorable words are those encountered in context—in books, articles, news, or movie scripts. 
 
-- Dashboard
-- Vocabulary List
-- Add Word
-- Word Detail
-- Import Hub
-- Import Steps
-- Review Hub
-- Review Session
-- Review Result
-- Collections Hub
-- Collection Detail
-- Statistics
-- Settings
+Voca was designed as a **portfolio-grade prototype** to unify this acquisition loop:
+1. **Contextual Capture**: Paste active text and let AI pull relevant candidate words.
+2. **AI Enrichment**: Instantly generate IPA pronunciations, translations, collocations, and contextual examples without manual data entry.
+3. **Spaced Repetition Practice**: Periodically review stored terms through target-to-native, spelling, and multiple-choice quizzes with scheduling calculated based on active recall performance.
 
-## Tech Stack
+---
 
-| Area | Tools |
+## ✨ Key Features
+
+* **AI Text Import & Vocabulary Extraction**: Parses whole articles or paragraphs using the **Gemini API** to identify vocabulary tailored to target learning levels.
+* **AI Word Enrichment**: Instantly generates translations, parts of speech, target definitions, standard collocations, and original contextual examples.
+* **IPA Phonetic Transcription Support**: Fully supports standard IPA phonetics (e.g., `/ˈtrɪɡər/`) with automatic AI retrieval and manual inline editing overlays.
+* **Dynamic Search & Filtering**: Advanced client-side vocabulary selectors filtering items by language, tags, or mastery levels.
+* **Collection-Based Management**: Organize vocabularies into distinct subjects or texts. Safe collection deletion prompts ensure child vocabulary relations are never silently orphaned.
+* **Custom Spaced Repetition Queue**: Select and limit review cards by collection and session count (e.g., 5, 10, 20, 50, all).
+* **Recall-Based Spaced Repetition (SRS)**: Employs a scheduling algorithm updating intervals and mastery levels depending on recall feedback (`Again`, `Hard`, `Good`, `Easy`).
+* **Active Session Performance Metrics**: Tracks user stats (stopwatch timer, correct/incorrect ratio, and accuracy percentage) and maps them onto the completion results screen.
+* **Excel-Compatible CSV Export**: Supports instant download of vocabulary lists containing IPA characters prefixed with the Unicode UTF-8 BOM (`\ufeff`) to prevent character encoding issues.
+* **Real Dashboard Analytics**: Displays actual metrics (due review counts, active learning streaks, collection totals, and recently added words) scoped to the authenticated user.
+* **Secure Database Persistence**: Integrated **Supabase Auth** and **Postgres RLS (Row Level Security)** to guarantee total private data isolation.
+
+---
+
+## 💻 Tech Stack
+
+| Component | Technology |
 | --- | --- |
-| Frontend | React, TypeScript, Vite |
-| Styling | Tailwind CSS, custom theme tokens |
-| UI primitives | Radix-style components |
-| Charts | Recharts |
-| Icons | Lucide React |
-| Backend | Python, Flask, Flask-CORS |
-| Data demo | In-memory JSON-style Python data |
-| Optional persistence setup | Supabase client configuration |
-| Container setup | Docker, Docker Compose |
+| **Frontend** | React, TypeScript, Vite, Tailwind CSS, Lucide Icons, Recharts |
+| **Backend** | Python, Flask, Flask-CORS |
+| **Database & Auth** | Supabase Postgres, Supabase Auth |
+| **AI Services** | Gemini API (Google Generative AI) |
+| **Deployment** | Vercel (Frontend), Google Cloud Run (Backend API) |
+| **DevOps & Local** | Docker, Docker Compose, Git |
 
-## Architecture
+---
+
+## 🏛️ System Architecture
 
 ```text
-React + Vite frontend
-        |
-        | fetch()
-        v
-Flask REST API
-        |
-        v
-In-memory vocabulary data
+       React/Vite Frontend (Vercel)
+                     |
+                     | HTTPS + Bearer JWT Token
+                     v
+      Flask REST API (Google Cloud Run)
+                     |
+         +-----------+-----------+
+         |                       |
+         v                       v
+ Supabase Client            Gemini API
+(Auth, RLS, Postgres)     (Text Extraction & Enrichment)
 ```
 
-Key integration files:
+* **JWT Verification**: The Flask backend operates on stateless bearer authentication. When a user requests data, the backend forwards the JWT payload to the Supabase Client, which enforces exact Row Level Security (RLS) filters on the Postgres database. No user can read or modify another user's vocabulary rows.
 
-- `frontend/src/lib/api.ts` defines the frontend API client and TypeScript data contract.
-- `frontend/src/app/screens/VocabularyList.tsx` loads the word list from the backend.
-- `frontend/src/app/screens/WordDetail.tsx` loads individual word details when an id is available.
-- `backend/app.py` exposes the REST endpoints.
-- `backend/data.py` stores the current fixed demo vocabulary data.
+---
 
-## API Endpoints
+## 🔄 Main Workflow
 
-The Flask backend runs on `http://127.0.0.1:5001` by default.
+```mermaid
+graph TD
+    A[User Logs In / Auth] --> B[Add Word Manually OR Paste Text for AI Import]
+    B --> C[Gemini API Extracts, Pronounces IPA, translates, & enriches]
+    C --> D[Words Saved persistently in Supabase Postgres]
+    D --> E[User groups vocabulary into Collections & Tags]
+    E --> F[Dashboard updates word/collection stats & review due counts]
+    F --> G[Start Review: select collection & card count limits]
+    G --> H[User quiz response: Again / Hard / Good / Easy]
+    H --> I[SRS scheduling calculates next_review date & mastery]
+    I --> J[Review results display stopwatch times & session accuracy]
+    D --> K[Download vocabulary as Excel-compatible UTF-8 BOM CSV]
+```
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/api/health` | Check backend availability |
-| `GET` | `/api/words` | Return all vocabulary items |
-| `GET` | `/api/words/<id>` | Return one vocabulary item |
+---
 
-## Local Development
+## 📡 API Overview
+
+Backend REST blueprint endpoints:
+
+### Auth & Connection
+* `GET /api/health`: Standard backend health checking return.
+
+### Vocabulary Management
+* `GET /api/words`: Retrieves all words for the user (supports optional `collection_id` filtering).
+* `GET /api/words/<id>`: Retrieves individual word card detail.
+* `POST /api/words`: Inserts a newly enriched vocabulary item along with sub-relations (examples, collocations, tags).
+* `PUT /api/words/<id>`: Updates word content or changes learning mastery parameters.
+* `DELETE /api/words/<id>`: Deletes a vocabulary word.
+
+### Collection Management
+* `GET /api/collections`: Retrieves all collections created by the user.
+* `POST /api/collections`: Creates a new collection container.
+* `DELETE /api/collections/<id>`: Safely deletes a collection.
+
+### AI Engine
+* `POST /api/ai/enrich`: Enriches a single word string using the Gemini model.
+* `POST /api/import/analyze`: Extracts candidates and definitions from user's pasted reading texts.
+
+### Spaced Repetition (SRS)
+* `GET /api/review/queue`: Pulls learning items due for practice based on scheduling intervals.
+* `POST /api/review/answer`: Submits recall results (`again`, `hard`, `good`, `easy`) to update SRS intervals.
+
+### Statistics & Export
+* `GET /api/stats`: Collects aggregate counts for dashboard metrics and progress charts.
+* `GET /api/export/vocabulary`: Generates structured data exports (supports JSON or UTF-8 BOM CSV formatting).
+
+---
+
+## 🛠️ Local Development
 
 ### Prerequisites
+* Node.js 18+
+* Python 3.10+
+* Docker & Docker Compose (Recommended)
 
-- Node.js 18+
-- Python 3.10+
-- npm
+### Using Docker Compose (Fastest Setup)
+Ensure you create a local configuration `.env` file first.
 
-### 1. Configure environment variables
+1. Spin up the entire multi-container local stack:
+   ```bash
+   docker compose up --build
+   ```
+2. Access the active local interfaces:
+   * **Frontend Dev Server**: [http://localhost:3000](http://localhost:3000)
+   * **Backend Dev REST Server**: [http://localhost:5001](http://localhost:5001)
 
-```bash
-cp .env.example .env.local
-```
-
-Default local values:
+### Required Environment Variables
+Configure these variables in your environment or files:
 
 ```env
-VITE_API_BASE_URL=http://127.0.0.1:5001
-VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY
+# Backend Environment Settings
+SUPABASE_URL=https://your-supabase-ref.supabase.co
+SUPABASE_ANON_KEY=your-supabase-anon-key
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-1.5-flash
+FRONTEND_ORIGIN=http://localhost:3000
+
+# Frontend Environment Settings
+VITE_API_BASE_URL=http://localhost:5001
+VITE_SUPABASE_URL=https://your-supabase-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-Supabase variables are prepared for future persistence work. The current demo can run without a connected Supabase project.
+---
 
-### 2. Start the backend
+## 📈 Project Status
 
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
-```
+| Milestone Area | Feature / Pipeline | Status |
+| --- | --- | --- |
+| **Authentication** | Supabase Auth login, session refreshing, token-based state | **Implemented** |
+| **Persistence** | Row-scoped PostgreSQL storage, secure transactions | **Implemented** |
+| **AI Enrichment** | Gemini structured prompting, bulk parsing, normalizers | **Implemented** |
+| **Spaced Repetition** | Due queues, interval tracking, performance scheduling | **Implemented** |
+| **CSV Export** | Excel character compatibility, BOM prefix, custom headers | **Implemented** |
+| **Phonetics** | Nullable IPA columns, badges, manual overlay forms | **Implemented** |
+| **Deployments** | Vercel Static Hosting, GCP Cloud Run Docker Container | **Implemented** |
+| **Refinement** | Custom SRS formulas, Mobile optimization, Anki presets | *In Progress / Planned* |
 
-### 3. Start the frontend
+---
 
-In another terminal:
+## 🎓 What I Learned
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Building Voca provided highly practical engineering insights:
+* **Stateless Authenticated REST Flows**: Orchestrated secure JWT credential propagation from a React client to a Python/Flask resource server, integrating auto-refresh handlers to seamlessly handle near-expiration tokens.
+* **Database Scoped Access Guidelines**: Leveraged Row Level Security (RLS) in PostgreSQL, designing DB schemas where row queries implicitly respect authorization structures.
+* **Deterministic Structured LLM Outputs**: Crafted strict system prompts, JSON templates, and custom normalizers (`sanitize_ipa`) to extract clean, consistent representations from Gemini Generative AI models.
+* **Excel Mojibake Debugging**: Investigated and resolved text corruption anomalies in standard Excel CSV renders by prefixing all outgoing CSV buffers with the Unicode Byte Order Mark (`\ufeff`).
+* **Micro-services Orchestration**: Formulated development environments utilizing multiple Docker containers bound dynamically via bridge networks and CORS configurations, mirroring Cloud production setups locally.
 
-Open the Vite URL shown in the terminal, usually `http://localhost:5173`.
+---
 
-### 4. Build for production
-
-```bash
-cd frontend
-npm run build
-```
-
-## Docker
-
-You can also run the frontend and backend with Docker Compose:
-
-```bash
-docker compose up --build
-```
-
-Services:
-
-- frontend: `http://localhost:5173`
-- backend: `http://localhost:5001`
-
-## Project Status
-
-| Area | Status |
-| --- | --- |
-| Multi-screen UI prototype | Implemented |
-| Flask REST backend | Implemented |
-| Frontend API integration | Implemented for vocabulary list and detail |
-| Supabase client setup | Prepared |
-| Persistent vocabulary CRUD | Planned |
-| Spaced repetition algorithm | Planned |
-| Real AI enrichment pipeline | Planned |
-| Authentication and user accounts | Planned |
-
-## Roadmap
-
-- **P0 Foundation**: routing, shared data contracts, and persistent data baseline.
-- **P1 Vocabulary Core**: vocabulary CRUD, collections, tags, search, and filtering.
-- **P2 Review Engine**: spaced-repetition scheduling, review queue updates, and review metrics.
-- **P3 Product Polish**: real analytics, saved settings, stronger empty/loading/error states, and deployment hardening.
-
-More details are available in [Plan.md](docs/architecture/Plan.md).
-
-## Project Notes
-
-Course-oriented implementation notes and learning logs are kept outside the main README so the GitHub landing page stays focused:
-
-- [Project Log](docs/architecture/project-log/README.md)
-- [Flask REST Homework Notes](docs/architecture/project-log/2026-04-20-flask-rest-homework.md)
-
-## Portfolio Note
-
-This repository is maintained as a portfolio project for product thinking, frontend engineering, and basic service integration. Some internal product strategy and design process materials are intentionally not included in the public repository.
-
-## License
+## 📄 License
 
 This repository is released for portfolio review only under a proprietary All Rights Reserved license.
 
