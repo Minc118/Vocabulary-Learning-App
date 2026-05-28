@@ -42,7 +42,25 @@ def create_app() -> Flask:
             return
             
         auth_header = request.headers.get("Authorization")
+        auth_header_present = auth_header is not None
+        bearer_token_present = False
+        if auth_header_present:
+            bearer_token_present = auth_header.startswith("Bearer ")
+
+        supabase_client_configured = False
+        supabase_url = Config.SUPABASE_URL
+        supabase_key = Config.SUPABASE_KEY
+        if supabase_url and supabase_key and supabase_url != "your_supabase_url":
+            supabase_client_configured = True
+
+        print(f"[AUTH_DIAG] auth_header_present: {auth_header_present}")
+        print(f"[AUTH_DIAG] bearer_token_present: {bearer_token_present}")
+        print(f"[AUTH_DIAG] supabase_client_configured: {supabase_client_configured}")
+        print(f"[AUTH_DIAG] auth_validation_method: get_user")
+
         if not auth_header or not auth_header.startswith("Bearer "):
+            print(f"[AUTH_DIAG] supabase_get_user_success: False")
+            print(f"[AUTH_DIAG] auth_failure_reason: missing_header" if not auth_header else "[AUTH_DIAG] auth_failure_reason: malformed_header")
             abort(401, "Missing or invalid Authorization header")
             
         token = auth_header.split(" ")[1]
@@ -50,10 +68,18 @@ def create_app() -> Flask:
             g.token = token
             supabase = get_supabase()
             user_response = supabase.auth.get_user(token)
+            
             if not user_response or not user_response.user:
+                print(f"[AUTH_DIAG] supabase_get_user_success: False")
+                print(f"[AUTH_DIAG] auth_failure_reason: get_user_failed")
                 abort(401, "Invalid token")
+                
             g.user_id = user_response.user.id
+            print(f"[AUTH_DIAG] supabase_get_user_success: True")
         except Exception as e:
+            print(f"[AUTH_DIAG] supabase_get_user_success: False")
+            print(f"[AUTH_DIAG] auth_failure_reason: get_user_failed")
+            print(f"[AUTH_DIAG] Exception: {str(e)}")
             abort(401, f"Authentication error: {str(e)}")
 
     app.register_blueprint(words_bp, url_prefix='/api/words')

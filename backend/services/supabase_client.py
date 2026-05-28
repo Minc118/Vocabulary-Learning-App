@@ -10,7 +10,10 @@ def get_supabase() -> Client:
         
     token = getattr(g, 'token', None)
     if token:
-        options = ClientOptions(headers={"Authorization": f"Bearer {token}"})
+        options = ClientOptions(headers={
+            "Authorization": f"Bearer {token}",
+            "apikey": key
+        })
         return create_client(url, key, options=options)
         
     return create_client(url, key)
