@@ -13,7 +13,7 @@ from routes.import_text import import_bp
 from routes.review import review_bp
 from routes.stats import stats_bp
 from routes.export import export_bp
-print("[APP_VERSION] auth-diag-stdout enabled", flush=True)
+print("[APP_VERSION] supabase-key-source-diag-v1", flush=True)
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -48,17 +48,31 @@ def create_app() -> Flask:
         if auth_header_present:
             bearer_token_present = auth_header.startswith("Bearer ")
 
-        supabase_client_configured = False
         supabase_url = Config.SUPABASE_URL
         supabase_key = Config.SUPABASE_KEY
+        supabase_client_configured = False
         if supabase_url and supabase_key and supabase_url != "your_supabase_url":
             supabase_client_configured = True
+
+        supabase_url_present = supabase_url is not None
+        supabase_url_format_ok = (supabase_url.startswith("https://") and ".supabase." in supabase_url) if supabase_url_present else False
+        
+        key_present = supabase_key is not None
+        key_format_is_publishable = (supabase_key.startswith("sb_publishable_") or supabase_key.startswith("sbp_")) if key_present else False
+        key_format_is_legacy_jwt = supabase_key.startswith("eyJhbGciOi") if key_present else False
+        key_length = len(supabase_key) if key_present else 0
 
         print(f"[AUTH_DIAG] auth_header_present={'true' if auth_header_present else 'false'}", flush=True)
         print(f"[AUTH_DIAG] bearer_token_present={'true' if bearer_token_present else 'false'}", flush=True)
         print(f"[AUTH_DIAG] supabase_client_configured={'true' if supabase_client_configured else 'false'}", flush=True)
         print("[AUTH_DIAG] auth_validation_method=get_user", flush=True)
         print(f"[AUTH_DIAG] supabase_key_source={Config.SUPABASE_KEY_SOURCE}", flush=True)
+        print(f"[AUTH_DIAG] supabase_url_present={'true' if supabase_url_present else 'false'}", flush=True)
+        print(f"[AUTH_DIAG] supabase_url_format_ok={'true' if supabase_url_format_ok else 'false'}", flush=True)
+        print(f"[AUTH_DIAG] key_present={'true' if key_present else 'false'}", flush=True)
+        print(f"[AUTH_DIAG] key_format_is_publishable={'true' if key_format_is_publishable else 'false'}", flush=True)
+        print(f"[AUTH_DIAG] key_format_is_legacy_jwt={'true' if key_format_is_legacy_jwt else 'false'}", flush=True)
+        print(f"[AUTH_DIAG] key_length_bucket={'0' if key_length == 0 else 'under_100' if key_length < 100 else '100_to_200' if key_length < 200 else 'over_200'}", flush=True)
 
         if not auth_header or not auth_header.startswith("Bearer "):
             print("[AUTH_DIAG] supabase_get_user_success=false", flush=True)
