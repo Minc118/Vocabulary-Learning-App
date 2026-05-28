@@ -31,7 +31,7 @@ Voca was designed as a **portfolio-grade prototype** to unify this acquisition l
 
 ## ✨ Key Features
 
-* **AI Text Import & Vocabulary Extraction**: Parses whole articles or paragraphs using the **Gemini API** to identify vocabulary tailored to target learning levels.
+* **AI Text Import & Vocabulary Extraction**: Parses whole articles or paragraphs using the **AI provider's API** to identify vocabulary tailored to target learning levels.
 * **AI Word Enrichment**: Instantly generates translations, parts of speech, target definitions, standard collocations, and original contextual examples.
 * **IPA Phonetic Transcription Support**: Fully supports standard IPA phonetics (e.g., `/ˈtrɪɡər/`) with automatic AI retrieval and manual inline editing overlays.
 * **Dynamic Search & Filtering**: Advanced client-side vocabulary selectors filtering items by language, tags, or mastery levels.
@@ -52,7 +52,7 @@ Voca was designed as a **portfolio-grade prototype** to unify this acquisition l
 | **Frontend** | React, TypeScript, Vite, Tailwind CSS, Lucide Icons, Recharts |
 | **Backend** | Python, Flask, Flask-CORS |
 | **Database & Auth** | Supabase Postgres, Supabase Auth |
-| **AI Services** | Gemini API (Google Generative AI) |
+| **AI Services** | AI Provider API (LLM Integration) |
 | **Deployment** | Vercel (Frontend), Google Cloud Run (Backend API) |
 | **DevOps & Local** | Docker, Docker Compose, Git |
 
@@ -70,7 +70,7 @@ Voca was designed as a **portfolio-grade prototype** to unify this acquisition l
          +-----------+-----------+
          |                       |
          v                       v
- Supabase Client            Gemini API
+ Supabase Client           AI / LLM API
 (Auth, RLS, Postgres)     (Text Extraction & Enrichment)
 ```
 
@@ -83,7 +83,7 @@ Voca was designed as a **portfolio-grade prototype** to unify this acquisition l
 ```mermaid
 graph TD
     A[User Logs In / Auth] --> B[Add Word Manually OR Paste Text for AI Import]
-    B --> C[Gemini API Extracts, Pronounces IPA, translates, & enriches]
+    B --> C[AI / LLM API Extracts, Pronounces IPA, translates, & enriches]
     C --> D[Words Saved persistently in Supabase Postgres]
     D --> E[User groups vocabulary into Collections & Tags]
     E --> F[Dashboard updates word/collection stats & review due counts]
@@ -116,7 +116,7 @@ Backend REST blueprint endpoints:
 * `DELETE /api/collections/<id>`: Safely deletes a collection.
 
 ### AI Engine
-* `POST /api/ai/enrich`: Enriches a single word string using the Gemini model.
+* `POST /api/ai/enrich`: Enriches a single word string using the integrated LLM service.
 * `POST /api/import/analyze`: Extracts candidates and definitions from user's pasted reading texts.
 
 ### Spaced Repetition (SRS)
@@ -154,8 +154,6 @@ Configure these variables in your environment or files:
 # Backend Environment Settings
 SUPABASE_URL=https://your-supabase-ref.supabase.co
 SUPABASE_ANON_KEY=your-supabase-anon-key
-GEMINI_API_KEY=your-gemini-api-key
-GEMINI_MODEL=gemini-1.5-flash
 FRONTEND_ORIGIN=http://localhost:3000
 
 # Frontend Environment Settings
@@ -163,6 +161,13 @@ VITE_API_BASE_URL=http://localhost:5001
 VITE_SUPABASE_URL=https://your-supabase-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
+
+In addition to the database settings above, you must configure the following for the AI features:
+* **AI Provider API Key**
+* **AI Model Configuration**
+
+> [!NOTE]
+> **AI Provider Configuration**: Exact environment variable names depend on the configured AI provider and are documented in `.env.example`.
 
 ---
 
@@ -172,7 +177,7 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 | --- | --- | --- |
 | **Authentication** | Supabase Auth login, session refreshing, token-based state | **Implemented** |
 | **Persistence** | Row-scoped PostgreSQL storage, secure transactions | **Implemented** |
-| **AI Enrichment** | Gemini structured prompting, bulk parsing, normalizers | **Implemented** |
+| **AI Enrichment** | LLM-assisted structured prompting, bulk parsing, normalizers | **Implemented** |
 | **Spaced Repetition** | Due queues, interval tracking, performance scheduling | **Implemented** |
 | **CSV Export** | Excel character compatibility, BOM prefix, custom headers | **Implemented** |
 | **Phonetics** | Nullable IPA columns, badges, manual overlay forms | **Implemented** |
@@ -186,7 +191,7 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 Building Voca provided highly practical engineering insights:
 * **Stateless Authenticated REST Flows**: Orchestrated secure JWT credential propagation from a React client to a Python/Flask resource server, integrating auto-refresh handlers to seamlessly handle near-expiration tokens.
 * **Database Scoped Access Guidelines**: Leveraged Row Level Security (RLS) in PostgreSQL, designing DB schemas where row queries implicitly respect authorization structures.
-* **Deterministic Structured LLM Outputs**: Crafted strict system prompts, JSON templates, and custom normalizers (`sanitize_ipa`) to extract clean, consistent representations from Gemini Generative AI models.
+* **Deterministic Structured LLM Outputs**: Crafted strict system prompts, JSON templates, and custom normalizers (`sanitize_ipa`) to extract clean, consistent representations from generative AI models.
 * **Excel Mojibake Debugging**: Investigated and resolved text corruption anomalies in standard Excel CSV renders by prefixing all outgoing CSV buffers with the Unicode Byte Order Mark (`\ufeff`).
 * **Micro-services Orchestration**: Formulated development environments utilizing multiple Docker containers bound dynamically via bridge networks and CORS configurations, mirroring Cloud production setups locally.
 
