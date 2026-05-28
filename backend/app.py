@@ -62,6 +62,51 @@ def create_app() -> Flask:
         key_format_is_legacy_jwt = supabase_key.startswith("eyJhbGciOi") if key_present else False
         key_length = len(supabase_key) if key_present else 0
 
+        anon_jwt_ref_present = False
+        anon_jwt_ref_matches_url = False
+        anon_jwt_role_is_anon = False
+
+        if key_present and key_format_is_legacy_jwt:
+            import base64
+            import json
+            try:
+                parts = supabase_key.split(".")
+                if len(parts) >= 2:
+                    payload_b64 = parts[1]
+                    missing_padding = len(payload_b64) % 4
+                    if missing_padding:
+                        payload_b64 += "=" * (4 - missing_padding)
+                    decoded_bytes = base64.urlsafe_b64decode(payload_b64)
+                    payload = json.loads(decoded_bytes)
+                    
+                    if isinstance(payload, dict):
+                        role = payload.get("role")
+                        anon_jwt_role_is_anon = (role == "anon")
+                        
+                        jwt_project_ref = None
+                        ref_val = payload.get("ref")
+                        if isinstance(ref_val, str) and ref_val.strip():
+                            jwt_project_ref = ref_val.strip()
+                        else:
+                            iss = payload.get("iss")
+                            if isinstance(iss, str) and iss.startswith("https://"):
+                                jwt_ref_parts = iss.split("https://")[1].split(".")
+                                if len(jwt_ref_parts) > 0:
+                                    jwt_project_ref = jwt_ref_parts[0]
+                                    
+                        if jwt_project_ref:
+                            anon_jwt_ref_present = True
+                            
+                            # Extract project ref from SUPABASE_URL
+                            if supabase_url and supabase_url.startswith("https://"):
+                                url_ref_parts = supabase_url.split("https://")[1].split(".")
+                                if len(url_ref_parts) > 0:
+                                    url_project_ref = url_ref_parts[0]
+                                    if url_project_ref:
+                                        anon_jwt_ref_matches_url = (jwt_project_ref == url_project_ref)
+            except Exception as e:
+                print(f"[AUTH_DIAG] jwt_decode_exception_type={type(e).__name__}", flush=True)
+
         print(f"[AUTH_DIAG] auth_header_present={'true' if auth_header_present else 'false'}", flush=True)
         print(f"[AUTH_DIAG] bearer_token_present={'true' if bearer_token_present else 'false'}", flush=True)
         print(f"[AUTH_DIAG] supabase_client_configured={'true' if supabase_client_configured else 'false'}", flush=True)
@@ -73,6 +118,9 @@ def create_app() -> Flask:
         print(f"[AUTH_DIAG] key_format_is_publishable={'true' if key_format_is_publishable else 'false'}", flush=True)
         print(f"[AUTH_DIAG] key_format_is_legacy_jwt={'true' if key_format_is_legacy_jwt else 'false'}", flush=True)
         print(f"[AUTH_DIAG] key_length_bucket={'0' if key_length == 0 else 'under_100' if key_length < 100 else '100_to_200' if key_length < 200 else 'over_200'}", flush=True)
+        print(f"[AUTH_DIAG] anon_jwt_ref_present={'true' if anon_jwt_ref_present else 'false'}", flush=True)
+        print(f"[AUTH_DIAG] anon_jwt_ref_matches_url={'true' if anon_jwt_ref_matches_url else 'false'}", flush=True)
+        print(f"[AUTH_DIAG] anon_jwt_role_is_anon={'true' if anon_jwt_role_is_anon else 'false'}", flush=True)
 
         if not auth_header or not auth_header.startswith("Bearer "):
             print("[AUTH_DIAG] supabase_get_user_success=false", flush=True)
