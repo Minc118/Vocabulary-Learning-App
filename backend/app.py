@@ -58,6 +58,7 @@ def create_app() -> Flask:
         print(f"[AUTH_DIAG] bearer_token_present={'true' if bearer_token_present else 'false'}", flush=True)
         print(f"[AUTH_DIAG] supabase_client_configured={'true' if supabase_client_configured else 'false'}", flush=True)
         print("[AUTH_DIAG] auth_validation_method=get_user", flush=True)
+        print(f"[AUTH_DIAG] supabase_key_source={Config.SUPABASE_KEY_SOURCE}", flush=True)
 
         if not auth_header or not auth_header.startswith("Bearer "):
             print("[AUTH_DIAG] supabase_get_user_success=false", flush=True)
