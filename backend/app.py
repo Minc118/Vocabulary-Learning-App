@@ -13,7 +13,7 @@ from routes.import_text import import_bp
 from routes.review import review_bp
 from routes.stats import stats_bp
 from routes.export import export_bp
-print("[APP_VERSION] supabase-key-source-diag-v1", flush=True)
+print("[APP_VERSION] supabase-config-diag-v2", flush=True)
 
 def create_app() -> Flask:
     app = Flask(__name__)
