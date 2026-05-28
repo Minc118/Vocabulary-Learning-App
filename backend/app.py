@@ -13,6 +13,7 @@ from routes.import_text import import_bp
 from routes.review import review_bp
 from routes.stats import stats_bp
 from routes.export import export_bp
+print("[APP_VERSION] auth-diag-stdout enabled", flush=True)
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -53,14 +54,15 @@ def create_app() -> Flask:
         if supabase_url and supabase_key and supabase_url != "your_supabase_url":
             supabase_client_configured = True
 
-        print(f"[AUTH_DIAG] auth_header_present: {auth_header_present}")
-        print(f"[AUTH_DIAG] bearer_token_present: {bearer_token_present}")
-        print(f"[AUTH_DIAG] supabase_client_configured: {supabase_client_configured}")
-        print(f"[AUTH_DIAG] auth_validation_method: get_user")
+        print(f"[AUTH_DIAG] auth_header_present={'true' if auth_header_present else 'false'}", flush=True)
+        print(f"[AUTH_DIAG] bearer_token_present={'true' if bearer_token_present else 'false'}", flush=True)
+        print(f"[AUTH_DIAG] supabase_client_configured={'true' if supabase_client_configured else 'false'}", flush=True)
+        print("[AUTH_DIAG] auth_validation_method=get_user", flush=True)
 
         if not auth_header or not auth_header.startswith("Bearer "):
-            print(f"[AUTH_DIAG] supabase_get_user_success: False")
-            print(f"[AUTH_DIAG] auth_failure_reason: missing_header" if not auth_header else "[AUTH_DIAG] auth_failure_reason: malformed_header")
+            print("[AUTH_DIAG] supabase_get_user_success=false", flush=True)
+            reason = "missing_header" if not auth_header else "malformed_header"
+            print(f"[AUTH_DIAG] auth_failure_reason={reason}", flush=True)
             abort(401, "Missing or invalid Authorization header")
             
         token = auth_header.split(" ")[1]
@@ -70,16 +72,16 @@ def create_app() -> Flask:
             user_response = supabase.auth.get_user(token)
             
             if not user_response or not user_response.user:
-                print(f"[AUTH_DIAG] supabase_get_user_success: False")
-                print(f"[AUTH_DIAG] auth_failure_reason: get_user_failed")
+                print("[AUTH_DIAG] supabase_get_user_success=false", flush=True)
+                print("[AUTH_DIAG] auth_failure_reason=get_user_failed", flush=True)
                 abort(401, "Invalid token")
                 
             g.user_id = user_response.user.id
-            print(f"[AUTH_DIAG] supabase_get_user_success: True")
+            print("[AUTH_DIAG] supabase_get_user_success=true", flush=True)
         except Exception as e:
-            print(f"[AUTH_DIAG] supabase_get_user_success: False")
-            print(f"[AUTH_DIAG] auth_failure_reason: get_user_failed")
-            print(f"[AUTH_DIAG] Exception: {str(e)}")
+            print("[AUTH_DIAG] supabase_get_user_success=false", flush=True)
+            print("[AUTH_DIAG] auth_failure_reason=get_user_failed", flush=True)
+            print(f"[AUTH_DIAG] Exception: {str(e)}", flush=True)
             abort(401, f"Authentication error: {str(e)}")
 
     app.register_blueprint(words_bp, url_prefix='/api/words')
