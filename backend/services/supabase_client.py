@@ -1,4 +1,4 @@
-from supabase import create_client, Client, ClientOptions
+from supabase import create_client, Client
 from config import Config
 from flask import g
 
@@ -8,15 +8,12 @@ def get_supabase() -> Client:
     if not url or not key or url == "your_supabase_url":
         raise Exception("Supabase is not configured. Please set SUPABASE_URL and SUPABASE_KEY in backend/.env")
         
+    client = create_client(url, key)
     token = getattr(g, 'token', None)
     if token:
-        options = ClientOptions(headers={
-            "Authorization": f"Bearer {token}",
-            "apikey": key
-        })
-        return create_client(url, key, options=options)
+        client.postgrest.auth(token)
         
-    return create_client(url, key)
+    return client
 
 from werkzeug.local import LocalProxy
 supabase = LocalProxy(get_supabase)

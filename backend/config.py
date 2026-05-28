@@ -33,3 +33,4 @@ class Config:
     
     GEMINI_API_KEY = _safe_strip(os.getenv("GEMINI_API_KEY"))
     GEMINI_MODEL = _safe_strip(os.getenv("GEMINI_MODEL")) or "gemini-2.5-flash"
+    ENABLE_AUTH_BYPASS = (os.getenv("ENABLE_AUTH_BYPASS") or "false").lower() == "true"

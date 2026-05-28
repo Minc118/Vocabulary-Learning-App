@@ -129,6 +129,13 @@ def create_app() -> Flask:
             abort(401, "Missing or invalid Authorization header")
             
         token = auth_header.split(" ")[1]
+        
+        if Config.ENABLE_AUTH_BYPASS and token == "fake-test-token":
+            g.token = token
+            g.user_id = "00000000-0000-0000-0000-000000000000"
+            print("[AUTH_DIAG] test_bypass_active=true", flush=True)
+            return
+            
         try:
             g.token = token
             supabase = get_supabase()
