@@ -17,6 +17,7 @@ import { Statistics } from './screens/Statistics';
 import { Settings } from './screens/Settings';
 import { AuthProvider } from './contexts/AuthContext';
 import { Login } from './screens/Login';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
+      <SpeedInsights />
     </BrowserRouter>
   </AuthProvider>
   );
