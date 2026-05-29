@@ -1,12 +1,11 @@
 import { Sparkles, Save, X, Loader2, Volume2 } from 'lucide-react';
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate } from "react-router";
 import { useState, useEffect } from 'react';
 import { createWord, enrichWord, fetchCollections, createCollection, type VocabularyWord, type Collection } from '../../lib/api';
 import { speakWord } from '../../lib/speech';
 
 export function AddWord() {
   const navigate = useNavigate();
-  const location = useLocation();
   
   const [word, setWord] = useState('');
   const [ipa, setIpa] = useState('');
@@ -89,41 +88,49 @@ export function AddWord() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between gap-4 border-b border-border/80 pb-4">
+    <div className="p-8 max-w-7xl mx-auto space-y-8 bg-[#f8fafb] animate-in fade-in-50 duration-200 text-[#191c1d] pb-24 min-h-screen">
+      {/* Header Panel */}
+      <div className="shrink-0 border-b border-[#c2c7cc]/50 pb-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight text-slate-900 dark:text-white">Add Word</h1>
-          <p className="text-muted-foreground text-[14px] mt-1 font-medium">Create a new vocabulary entry for your personal dictionary</p>
+          <div className="text-[#42474b] font-bold tracking-wider text-[10px] uppercase select-none">
+            Manual Entry Studio
+          </div>
+          <h1 className="text-[26px] font-extrabold tracking-tight text-[#191c1d] leading-none mt-1">Add Word</h1>
+          <p className="text-[13.5px] text-[#42474b] font-semibold mt-2">Create a new vocabulary entry for your personal spaced-repetition dictionary.</p>
         </div>
         <button
           onClick={() => navigate('/vocabulary')}
-          className="w-9 h-9 flex items-center justify-center rounded-xl border border-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-850 dark:hover:text-white transition-all cursor-pointer shadow-sm active:scale-95"
-          title="Back to library"
+          className="h-10 px-4 bg-white border border-[#c2c7cc]/70 text-[#42474b] rounded-xl hover:bg-[#f2f4f5] transition-all font-bold text-[13px] flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 select-none"
         >
-          <X className="w-4.5 h-4.5" strokeWidth={2} />
+          <X className="w-4 h-4 text-[#42474b]" strokeWidth={2.5} />
+          <span>Cancel</span>
         </button>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-200/50 bg-rose-50 px-4 py-3 text-[13.5px] font-medium text-rose-700">
-          {error}
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-[13.5px] text-rose-800 space-y-2">
+          <div className="font-extrabold text-[15px]">Manual Entry Alert</div>
+          <div className="text-[13.2px] text-rose-700 font-semibold leading-relaxed">
+            {error}
+          </div>
         </div>
       )}
 
+      {/* Forms Split columns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Left Panel: Manual Input */}
+        {/* Left Column: Form Fields */}
         <div className="space-y-6">
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5">
-            <h3 className="font-bold text-[15px] text-foreground">Core Information</h3>
+          <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6.5 shadow-sm space-y-5">
+            <h3 className="font-extrabold text-[15px] text-[#002434] tracking-tight mb-1 select-none">Core Information</h3>
 
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-[13px] font-semibold text-slate-550">Word *</label>
+                  <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider select-none">Word *</label>
                   {word.trim() && (
                     <button
                       onClick={() => speakWord(word, language)}
-                      className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-bold text-slate-600 dark:text-slate-350 rounded transition-all active:scale-95 cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#002434]/5 border border-[#002434]/15 text-[10.5px] font-bold text-[#002434] rounded-lg transition-all active:scale-95 cursor-pointer select-none"
                       type="button"
                       title="Preview Pronunciation"
                     >
@@ -137,28 +144,28 @@ export function AddWord() {
                   value={word}
                   onChange={(e) => setWord(e.target.value)}
                   placeholder="Enter word..."
-                  className="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] placeholder:text-muted-foreground focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+                  className="w-full h-10 px-3.5 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[14px] text-[#191c1d] font-semibold placeholder:text-[#42474b]/50 focus:outline-none focus:bg-white transition-all duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-slate-550 mb-2">Phonetic / IPA (Optional)</label>
+                <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Phonetic / IPA (Optional)</label>
                 <input
                   type="text"
                   value={ipa}
                   onChange={(e) => setIpa(e.target.value)}
                   placeholder="e.g. /ˈtrɪɡər/"
-                  className="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] placeholder:text-muted-foreground focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+                  className="w-full h-10 px-3.5 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-mono text-[#191c1d] font-semibold placeholder:text-[#42474b]/50 focus:outline-none focus:bg-white transition-all duration-200"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[13px] font-semibold text-slate-550 mb-2">Language</label>
+                  <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Language</label>
                   <select 
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all cursor-pointer font-semibold text-slate-700 dark:text-slate-305"
+                    className="w-full h-10 px-3 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-semibold text-[#191c1d] focus:outline-none focus:bg-white transition-all duration-200 cursor-pointer"
                   >
                     <option>English</option>
                     <option>German</option>
@@ -168,11 +175,11 @@ export function AddWord() {
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-semibold text-slate-550 mb-2">Part of Speech</label>
+                  <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Part of Speech</label>
                   <select 
                     value={pos}
                     onChange={(e) => setPos(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all cursor-pointer font-semibold text-slate-700 dark:text-slate-305"
+                    className="w-full h-10 px-3 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-semibold text-[#191c1d] focus:outline-none focus:bg-white transition-all duration-200 cursor-pointer"
                   >
                     <option>Noun</option>
                     <option>Verb</option>
@@ -184,24 +191,24 @@ export function AddWord() {
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-slate-550 mb-2">Translation</label>
+                <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Translation / Meaning</label>
                 <input
                   type="text"
                   value={translation}
                   onChange={(e) => setTranslation(e.target.value)}
-                  placeholder="Enter native translation..."
-                  className="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] placeholder:text-muted-foreground focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+                  placeholder="Enter translation or meaning..."
+                  className="w-full h-10 px-3.5 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[14px] text-[#191c1d] font-semibold placeholder:text-[#42474b]/50 focus:outline-none focus:bg-white transition-all duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-slate-550 mb-2">Notes</label>
+                <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Notes / Memory Hooks (Optional)</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add custom study definitions or learning notes..."
+                  placeholder="Add custom notes, spelling tricks, or mnemonics..."
                   rows={4}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] placeholder:text-muted-foreground focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all resize-none"
+                  className="w-full px-3.5 py-2.5 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] leading-relaxed text-[#191c1d] font-semibold placeholder:text-[#42474b]/50 focus:outline-none focus:bg-white transition-all duration-200 resize-none"
                 />
               </div>
             </div>
@@ -209,28 +216,28 @@ export function AddWord() {
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !word.trim()}
-              className="w-full h-10 mt-3.5 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 rounded-xl font-bold transition-all text-[14px] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm active:scale-95"
+              className="w-full h-10 mt-2 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 rounded-xl font-bold transition-all text-[13.5px] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm active:scale-95 select-none"
             >
-              {isGenerating ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Sparkles className="w-4.5 h-4.5 text-teal-400" strokeWidth={2} />}
-              <span>{isGenerating ? 'AI is enriching word...' : 'Enrich word with AI'}</span>
+              {isGenerating ? <Loader2 className="w-4.5 h-4.5 animate-spin text-[#002434]" strokeWidth={2.5} /> : <Sparkles className="w-4.5 h-4.5 text-teal-500" strokeWidth={2.5} />}
+              <span>{isGenerating ? 'AI is enriching word details...' : 'Enrich word with AI'}</span>
             </button>
           </div>
 
-          {/* Org Section */}
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
-            <h3 className="font-bold text-[15px] text-foreground">Organization</h3>
+          {/* Organization Widget */}
+          <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6.5 shadow-sm space-y-4">
+            <h3 className="font-extrabold text-[15px] text-[#002434] tracking-tight mb-1 select-none">Organization</h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[13px] font-semibold text-slate-550 mb-2">Collections</label>
+                <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Destination Collection</label>
                 {isCreatingCollection ? (
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={newCollectionName}
                       onChange={(e) => setNewCollectionName(e.target.value)}
-                      placeholder="New collection name..."
-                      className="flex-1 h-10 px-3.5 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all"
+                      placeholder="New folder name..."
+                      className="flex-1 h-10 px-3.5 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[14px] text-[#191c1d] font-semibold placeholder:text-[#42474b]/50 focus:outline-none focus:bg-white transition-all duration-200"
                       autoFocus
                     />
                     <button
@@ -243,16 +250,16 @@ export function AddWord() {
                           setIsCreatingCollection(false);
                           setNewCollectionName('');
                         } catch (err) {
-                          setError('Failed to create collection');
+                          setError('Failed to create collection folder');
                         }
                       }}
-                      className="h-10 px-4 bg-primary text-primary-foreground font-semibold rounded-xl text-[13px] cursor-pointer"
+                      className="h-10 px-4 bg-[#f2f4f5] border border-[#002434]/40 hover:bg-[#eceeef] text-[#002434] font-bold rounded-xl text-[13px] cursor-pointer active:scale-95 shadow-sm select-none"
                     >
                       Add
                     </button>
                     <button
                       onClick={() => setIsCreatingCollection(false)}
-                      className="h-10 px-4 border border-border font-semibold rounded-xl text-[13px] cursor-pointer hover:bg-slate-50"
+                      className="h-10 px-4 bg-white border border-[#c2c7cc]/70 text-[#42474b] font-bold rounded-xl text-[13px] cursor-pointer hover:bg-[#f2f4f5] active:scale-95 shadow-sm select-none"
                     >
                       Cancel
                     </button>
@@ -267,76 +274,76 @@ export function AddWord() {
                         setSelectedCollection(e.target.value);
                       }
                     }}
-                    className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all cursor-pointer font-semibold text-slate-700 dark:text-slate-305"
+                    className="w-full h-10 px-3 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-semibold text-[#191c1d] focus:outline-none focus:bg-white transition-all duration-200 cursor-pointer"
                   >
-                    <option value="">None</option>
+                    <option value="">None (Standalone)</option>
                     {collections.map(c => (
                       <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
-                    <option value="___CREATE_NEW___">+ Create new collection...</option>
+                    <option value="___CREATE_NEW___">+ Create new collection folder...</option>
                   </select>
                 )}
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-slate-550 mb-2">Tags</label>
+                <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Tags</label>
                 <input
                   type="text"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  placeholder="e.g. imported, academic (comma separated)..."
-                  className="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] placeholder:text-muted-foreground focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all duration-200"
+                  placeholder="e.g. imported, academic, technical (comma separated)..."
+                  className="w-full h-10 px-3.5 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[14px] text-[#191c1d] font-semibold placeholder:text-[#42474b]/50 focus:outline-none focus:bg-white transition-all duration-200"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Panel: AI Enrichment */}
+        {/* Right Column: AI Sandbox Enrichment */}
         <div className="space-y-6 lg:sticky lg:top-24">
           {isGenerating ? (
-            <div className="bg-card border border-border rounded-2xl p-12 text-center h-full flex flex-col justify-center items-center min-h-[400px] shadow-sm">
-              <Loader2 className="w-10 h-10 text-primary mx-auto mb-4 animate-spin" strokeWidth={1.5} />
-              <div className="text-[15px] font-bold text-foreground mb-1">AI Enrichment In Progress</div>
-              <div className="text-[13px] text-muted-foreground max-w-xs leading-relaxed">
-                Voca AI is analyzing linguistic properties to generate accurate definitions, IPAs, and examples...
+            <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-12 text-center h-full flex flex-col justify-center items-center min-h-[400px] shadow-sm animate-pulse">
+              <Loader2 className="w-10 h-10 text-[#002434] mx-auto mb-4 animate-spin" strokeWidth={1.5} />
+              <div className="text-[15px] font-extrabold text-[#002434] mb-1">AI Enrichment In Progress</div>
+              <div className="text-[13px] text-[#42474b] max-w-xs leading-relaxed font-semibold">
+                Voca AI is analyzing linguistic properties to generate Spaced Repetition definitions, IPAs, and examples...
               </div>
             </div>
           ) : aiData ? (
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
-              <div className="flex items-center gap-2.5 mb-2 pb-3 border-b border-border/80">
-                <Sparkles className="w-4.5 h-4.5 text-teal-500 animate-pulse" strokeWidth={2} />
-                <h3 className="font-bold text-[15px] text-foreground">AI-Generated Intelligence</h3>
+            <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="flex items-center gap-2 mb-2 pb-3.5 border-b border-[#c2c7cc]/40 select-none">
+                <Sparkles className="w-4.5 h-4.5 text-teal-500 animate-pulse" strokeWidth={2.5} />
+                <h3 className="font-extrabold text-[15px] text-[#002434] tracking-tight">AI-Generated Intelligence</h3>
               </div>
 
               <div className="space-y-5">
                 {aiData.ipa && (
                   <div>
-                    <span className="block text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">IPA Transcription</span>
-                    <span className="inline-flex items-center font-mono font-bold text-[14.5px] text-primary bg-primary/5 border border-primary/10 rounded-md px-2.5 py-0.5">
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-1.5 select-none">IPA Phonetic Key</span>
+                    <span className="inline-flex items-center font-mono font-bold text-[13.5px] text-[#002434] bg-[#002434]/5 border border-[#002434]/15 rounded-lg px-2.5 py-0.5 select-all">
                       /{aiData.ipa.replace(/^\/|\/$/g, '')}/
                     </span>
                   </div>
                 )}
 
                 {aiData.definition && (
-                  <div>
-                    <span className="block text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Definition</span>
-                    <p className="text-[14px] font-medium leading-relaxed text-slate-800 dark:text-slate-200">
+                  <div className="select-all">
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-1.5 select-none">Definition</span>
+                    <p className="text-[14px] font-bold leading-relaxed text-[#191c1d]">
                       {aiData.definition}
                     </p>
                   </div>
                 )}
 
                 {aiData.examples && aiData.examples.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="block text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-2">Example Sentences</span>
-                    <div className="space-y-3">
+                  <div className="space-y-2 select-all">
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-2 select-none">Context Examples</span>
+                    <div className="space-y-3.5">
                       {aiData.examples.map((example, i) => (
-                        <div key={i} className="pl-3.5 border-l-2 border-teal-500/30 space-y-0.5">
-                          <div className="text-[14px] font-medium leading-relaxed text-slate-900 dark:text-white">{example.sentence || example}</div>
+                        <div key={i} className="pl-3.5 border-l-2 border-[#002434]/30 space-y-1">
+                          <div className="text-[14px] font-bold leading-relaxed text-[#191c1d]">{example.sentence || example}</div>
                           {example.translation && (
-                            <div className="text-[13px] text-muted-foreground font-medium">{example.translation}</div>
+                            <div className="text-[12.5px] text-[#42474b] font-semibold">{example.translation}</div>
                           )}
                         </div>
                       ))}
@@ -346,10 +353,13 @@ export function AddWord() {
 
                 {aiData.collocations && aiData.collocations.length > 0 && (
                   <div>
-                    <span className="block text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-2">Common Collocations</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-2 select-none">Common Collocations</span>
                     <div className="flex flex-wrap gap-1.5">
                       {aiData.collocations.map((item, i) => (
-                        <span key={i} className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/40 rounded-lg text-[12.5px] font-semibold text-slate-700 dark:text-slate-300 border border-border/40">
+                        <span 
+                          key={i} 
+                          className="px-2.5 py-1 bg-[#002434]/5 border border-[#002434]/10 rounded-xl text-[12px] font-bold text-[#002434]"
+                        >
                           {item}
                         </span>
                       ))}
@@ -359,10 +369,13 @@ export function AddWord() {
 
                 {aiData.synonyms && aiData.synonyms.length > 0 && (
                   <div>
-                    <span className="block text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-2">Synonyms</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-2 select-none">Synonyms</span>
                     <div className="flex flex-wrap gap-1.5">
                       {aiData.synonyms.map((item, i) => (
-                        <span key={i} className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/40 rounded-lg text-[12.5px] font-semibold text-slate-700 dark:text-slate-300 border border-border/40">
+                        <span 
+                          key={i} 
+                          className="px-2.5 py-1 bg-[#002434]/5 border border-[#002434]/10 rounded-xl text-[12px] font-bold text-[#002434]"
+                        >
                           {item}
                         </span>
                       ))}
@@ -372,10 +385,10 @@ export function AddWord() {
               </div>
             </div>
           ) : (
-            <div className="bg-card border border-border border-dashed rounded-2xl p-12 text-center h-full flex flex-col justify-center items-center min-h-[350px] shadow-sm">
-              <Sparkles className="w-9 h-9 text-slate-350 mx-auto mb-3.5" strokeWidth={1.5} />
-              <div className="text-[15px] font-bold text-foreground mb-1">AI Enrichment Ready</div>
-              <div className="text-[13.5px] text-muted-foreground max-w-xs leading-relaxed">
+            <div className="bg-white border border-[#c2c7cc]/60 border-dashed rounded-3xl p-12 text-center h-full flex flex-col justify-center items-center min-h-[350px] shadow-sm select-none">
+              <Sparkles className="w-9 h-9 text-slate-400 mx-auto mb-3.5" strokeWidth={1.5} />
+              <div className="text-[15px] font-extrabold text-[#002434] mb-1">AI Enrichment Ready</div>
+              <div className="text-[13px] text-[#42474b] max-w-xs leading-relaxed font-semibold">
                 Provide a word in the manual panel and trigger "Enrich word with AI" to instantly generate dictionary definitions and collocations.
               </div>
             </div>
@@ -383,10 +396,11 @@ export function AddWord() {
         </div>
       </div>
 
-      <div className="mt-8 flex justify-end gap-3.5 border-t border-border/80 pt-5">
+      {/* Save Action Footer */}
+      <div className="mt-8 flex justify-end gap-3.5 border-t border-[#c2c7cc]/50 pt-5">
         <button
           onClick={() => navigate('/vocabulary')}
-          className="h-10 px-5 border border-border rounded-xl hover:bg-slate-50 font-semibold transition-colors text-[14px] cursor-pointer"
+          className="h-10 px-5 bg-white border border-[#c2c7cc]/70 text-[#42474b] hover:bg-[#f2f4f5] rounded-xl font-bold text-[13.5px] transition-all cursor-pointer select-none active:scale-95 shadow-sm"
           disabled={isSaving}
         >
           Cancel
@@ -394,9 +408,9 @@ export function AddWord() {
         <button 
           onClick={handleSave}
           disabled={isSaving}
-          className="h-10 px-5 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 font-bold rounded-xl transition-all text-[14px] flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm active:scale-95"
+          className="h-10 px-6 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 font-bold rounded-xl transition-all text-[13.5px] flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 select-none disabled:opacity-50"
         >
-          {isSaving ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Save className="w-4.5 h-4.5" strokeWidth={2} />}
+          {isSaving ? <Loader2 className="w-4.5 h-4.5 animate-spin text-[#002434]" strokeWidth={2.5} /> : <Save className="w-4.5 h-4.5 text-[#002434]" strokeWidth={2.5} />}
           <span>{isSaving ? 'Saving vocabulary entry...' : 'Save Word'}</span>
         </button>
       </div>
