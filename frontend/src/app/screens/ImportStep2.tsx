@@ -228,7 +228,7 @@ export function ImportStep2() {
             <button 
               type="submit" 
               disabled={isCheckingTypo || !manualWord.trim()}
-              className="h-10 px-4.5 bg-[#002434] hover:bg-[#0a3346] text-white font-bold rounded-xl text-[13px] flex items-center gap-1.5 disabled:opacity-50 transition-all active:scale-95 cursor-pointer shrink-0 shadow-md shadow-[#002434]/5"
+              className="h-10 px-4.5 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 font-bold rounded-xl text-[13px] flex items-center gap-1.5 disabled:opacity-50 transition-all active:scale-95 cursor-pointer shrink-0 shadow-sm"
             >
               {isCheckingTypo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4 text-teal-400" strokeWidth={2.5} />}
               <span>{isCheckingTypo ? 'Verifying...' : 'Add Word'}</span>
@@ -311,7 +311,7 @@ export function ImportStep2() {
         <button
           onClick={handleContinue}
           disabled={selected.size === 0}
-          className="h-10 px-5 bg-[#002434] hover:bg-[#0a3346] text-white font-bold rounded-xl transition-all text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md shadow-[#002434]/10 active:scale-95 select-none"
+          className="h-10 px-5 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 font-bold rounded-xl transition-all text-[14px] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm active:scale-95 select-none"
         >
           <span>Continue with {selected.size} words</span>
           <ArrowRight className="w-4 h-4 text-teal-400" strokeWidth={2.5} />

@@ -51,7 +51,7 @@ export function ImportHub() {
 
         <button
           onClick={() => navigate('/import/step1')}
-          className="w-full h-11 mt-8 bg-[#002434] hover:bg-[#0a3346] text-white rounded-xl font-bold transition-all text-[14px] flex items-center justify-center gap-2 shadow-md shadow-black/10 active:scale-99 cursor-pointer"
+          className="w-full h-11 mt-8 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 rounded-xl font-bold transition-all text-[14px] flex items-center justify-center gap-2 shadow-sm active:scale-99 cursor-pointer select-none"
         >
           <span>Start New Import</span>
           <ArrowRight className="w-4 h-4 text-teal-400" strokeWidth={2.5} />

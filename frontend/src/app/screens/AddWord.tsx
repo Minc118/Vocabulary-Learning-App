@@ -209,7 +209,7 @@ export function AddWord() {
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !word.trim()}
-              className="w-full h-10 mt-3.5 bg-[#002434] hover:bg-[#0a3346] text-white rounded-xl font-bold transition-all text-[14px] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-md shadow-black/10 active:scale-95"
+              className="w-full h-10 mt-3.5 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 rounded-xl font-bold transition-all text-[14px] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm active:scale-95"
             >
               {isGenerating ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Sparkles className="w-4.5 h-4.5 text-teal-400" strokeWidth={2} />}
               <span>{isGenerating ? 'AI is enriching word...' : 'Enrich word with AI'}</span>
@@ -394,7 +394,7 @@ export function AddWord() {
         <button 
           onClick={handleSave}
           disabled={isSaving}
-          className="h-10 px-5 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-all text-[14px] flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-md shadow-primary/5 active:scale-95"
+          className="h-10 px-5 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 font-bold rounded-xl transition-all text-[14px] flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm active:scale-95"
         >
           {isSaving ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Save className="w-4.5 h-4.5" strokeWidth={2} />}
           <span>{isSaving ? 'Saving vocabulary entry...' : 'Save Word'}</span>

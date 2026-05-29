@@ -339,7 +339,7 @@ export function ImportStep3() {
                       setError('Failed to create collection');
                     }
                   }}
-                  className="h-10 px-4 bg-[#002434] hover:bg-[#0a3346] text-white font-bold rounded-xl text-[13px] cursor-pointer shadow-sm active:scale-95 transition-all"
+                  className="h-10 px-4 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 font-bold rounded-xl text-[13px] cursor-pointer shadow-sm active:scale-95 transition-all"
                 >
                   Add
                 </button>
@@ -446,7 +446,7 @@ export function ImportStep3() {
                       </button>
                       <button
                         type="submit"
-                        className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#002434] hover:bg-[#0a3346] text-white transition-all cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#002434]/10 hover:bg-[#002434]/20 text-[#002434] transition-all cursor-pointer"
                         title="Save changes"
                       >
                         <Check className="w-4 h-4" />
@@ -566,7 +566,7 @@ export function ImportStep3() {
                       </button>
                       <button
                         type="submit"
-                        className="h-9 px-4 bg-[#002434] hover:bg-[#0a3346] text-white font-bold rounded-xl text-[12.5px] cursor-pointer shadow-sm active:scale-95 transition-all select-none"
+                        className="h-9 px-4 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 font-bold rounded-xl text-[12.5px] cursor-pointer shadow-sm active:scale-95 transition-all select-none"
                       >
                         Save Changes
                       </button>
@@ -732,7 +732,7 @@ export function ImportStep3() {
             <button
               onClick={handleSaveAll}
               disabled={isSaving}
-              className="h-10 px-5 bg-[#002434] hover:bg-[#0a3346] text-white font-bold rounded-xl transition-all text-[14px] flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-md shadow-[#002434]/10 active:scale-95 select-none"
+              className="h-10 px-5 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] hover:bg-[#eceeef] hover:border-[#002434]/60 font-bold rounded-xl transition-all text-[14px] flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-sm active:scale-95 select-none"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Save className="w-4 h-4" strokeWidth={2} />}
               <span>{isSaving ? `Saving ${saveProgressCount}/${words.length}...` : `Save ${words.length} Words to Voca`}</span>
