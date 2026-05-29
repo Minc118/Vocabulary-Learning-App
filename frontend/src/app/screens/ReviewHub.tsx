@@ -2,6 +2,7 @@ import { RotateCcw, TrendingUp, Clock, Calendar, Loader2, BookOpen, Layers, Sett
 import { useNavigate } from "react-router";
 import { useState, useEffect } from 'react';
 import { fetchReviewQueue, fetchCollections, type VocabularyWord, type Collection } from '../../lib/api';
+import { SelectField, type SelectOption } from '../components/ui/SelectField';
 
 export function ReviewHub() {
   const navigate = useNavigate();
@@ -17,6 +18,19 @@ export function ReviewHub() {
   const [wordCount, setWordCount] = useState<number>(20);
   const [customWordCount, setCustomWordCount] = useState<string>('20');
   const [collections, setCollections] = useState<Collection[]>([]);
+
+  const collectionOptions: SelectOption[] = [
+    { value: 'all', label: 'All Library Words' },
+    ...collections.map(c => ({ value: c.id, label: c.name }))
+  ];
+
+  const wordCountOptions: SelectOption[] = [
+    { value: '10', label: '10 Words' },
+    { value: '20', label: '20 Words' },
+    { value: '50', label: '50 Words' },
+    { value: '100', label: '100 Words' },
+    { value: 'custom', label: 'Custom count...' }
+  ];
 
   const activeModes = Object.entries(selectedModes).filter(([_, v]) => v).map(([k]) => k);
 
@@ -188,19 +202,14 @@ export function ReviewHub() {
                     <Layers className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.5} />
                     <span>2. Source Material</span>
                   </label>
-                  <select
+                  <SelectField
                     value={collectionId}
-                    onChange={(e) => {
+                    onChange={(val) => {
                       setIsLoading(true);
-                      setCollectionId(e.target.value);
+                      setCollectionId(val);
                     }}
-                    className="w-full h-10 bg-[#f8fafb] border border-[#c2c7cc] rounded-xl px-3 text-[13px] focus:outline-none focus:border-[#002434] focus:ring-2 focus:ring-[#002434]/10 transition-all cursor-pointer font-bold text-[#42474b]"
-                  >
-                    <option value="all">All Library Words</option>
-                    {collections.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+                    options={collectionOptions}
+                  />
                 </div>
 
                 {/* Threshold Dropdown */}
@@ -210,10 +219,10 @@ export function ReviewHub() {
                     <span>3. Threshold Limit</span>
                   </label>
                   <div className="flex gap-2">
-                    <select
+                    <SelectField
+                      className="flex-1"
                       value={wordCountMode === 'custom' ? 'custom' : wordCount.toString()}
-                      onChange={(e) => {
-                        const val = e.target.value;
+                      onChange={(val) => {
                         if (val === 'custom') {
                           setWordCountMode('custom');
                           const parsed = parseInt(customWordCount, 10);
@@ -229,14 +238,8 @@ export function ReviewHub() {
                           setCustomWordCount(val);
                         }
                       }}
-                      className="flex-1 h-10 bg-[#f8fafb] border border-[#c2c7cc] rounded-xl px-3 text-[13px] focus:outline-none focus:border-[#002434] focus:ring-2 focus:ring-[#002434]/10 transition-all cursor-pointer font-bold text-[#42474b]"
-                    >
-                      <option value="10">10 Words</option>
-                      <option value="20">20 Words</option>
-                      <option value="50">50 Words</option>
-                      <option value="100">100 Words</option>
-                      <option value="custom">Custom count...</option>
-                    </select>
+                      options={wordCountOptions}
+                    />
                     
                     {wordCountMode === 'custom' && (
                       <input

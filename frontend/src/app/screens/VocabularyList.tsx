@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Plus, Filter, SlidersHorizontal, MoreVertical, Clock, Tag, Volume2, Edit2, Trash2, Loader2, Search } from 'lucide-react';
 import { checkBackendConnection, fetchWords, deleteWord, type VocabularyWord } from '../../lib/api';
 import { speakWord } from '../../lib/speech';
+import { SelectField, type SelectOption } from '../components/ui/SelectField';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -29,9 +30,36 @@ export function VocabularyList() {
   const [selectedTag, setSelectedTag] = useState('All');
   const [selectedMastery, setSelectedMastery] = useState('All');
 
+  // Client-side pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  // Reset pagination to page 1 on filter/search adjustments
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedLanguage, selectedTag, selectedMastery]);
+
   // Compile unique lists for select dropdowns
   const availableLanguages = Array.from(new Set(words.map(w => w.language).filter(Boolean))).sort();
   const availableTags = Array.from(new Set(words.flatMap(w => w.tags || []).filter(Boolean))).sort();
+
+  const languageOptions: SelectOption[] = [
+    { value: 'All', label: 'All' },
+    ...availableLanguages.map(l => ({ value: l, label: l }))
+  ];
+
+  const tagOptions: SelectOption[] = [
+    { value: 'All', label: 'All' },
+    ...availableTags.map(t => ({ value: t, label: t }))
+  ];
+
+  const masteryOptions: SelectOption[] = [
+    { value: 'All', label: 'All' },
+    { value: 'New', label: 'New' },
+    { value: 'Learning', label: 'Learning' },
+    { value: 'Familiar', label: 'Familiar' },
+    { value: 'Mastered', label: 'Mastered' }
+  ];
 
   // Perform client-side filtering (including search query)
   const filteredWords = words.filter(item => {
@@ -62,6 +90,14 @@ export function VocabularyList() {
     }
     return true;
   });
+
+  // Pagination Calculations
+  const totalItems = filteredWords.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const activePage = Math.min(currentPage, totalPages);
+  const startIndex = (activePage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedWords = filteredWords.slice(startIndex, endIndex);
 
   // States for three-dot menu and delete confirmation
   const [wordToDelete, setWordToDelete] = useState<VocabularyWord | null>(null);
@@ -196,49 +232,36 @@ export function VocabularyList() {
           <div className="flex items-center gap-2 bg-[#f2f4f5] hover:bg-[#eceeef] border border-[#c2c7cc]/50 rounded-xl px-3 py-1.5 text-[13px] font-semibold transition-colors">
             <Filter className="w-3.5 h-3.5 text-[#42474b]" strokeWidth={2} />
             <span className="text-[#42474b] font-bold">Language:</span>
-            <select
+            <SelectField
               value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-              className="bg-transparent border-none outline-none cursor-pointer pr-1 font-bold text-[#002434]"
-            >
-              <option value="All">All</option>
-              {availableLanguages.map(lang => (
-                <option key={lang} value={lang}>{lang}</option>
-              ))}
-            </select>
+              onChange={setSelectedLanguage}
+              options={languageOptions}
+              variant="inline-filter"
+            />
           </div>
 
           {/* Tags Filter */}
           <div className="flex items-center gap-2 bg-[#f2f4f5] hover:bg-[#eceeef] border border-[#c2c7cc]/50 rounded-xl px-3 py-1.5 text-[13px] font-semibold transition-colors">
             <Tag className="w-3.5 h-3.5 text-[#42474b]" strokeWidth={2} />
             <span className="text-[#42474b] font-bold">Tag:</span>
-            <select
+            <SelectField
               value={selectedTag}
-              onChange={(e) => setSelectedTag(e.target.value)}
-              className="bg-transparent border-none outline-none cursor-pointer pr-1 font-bold text-[#002434]"
-            >
-              <option value="All">All</option>
-              {availableTags.map(tag => (
-                <option key={tag} value={tag}>{tag}</option>
-              ))}
-            </select>
+              onChange={setSelectedTag}
+              options={tagOptions}
+              variant="inline-filter"
+            />
           </div>
 
           {/* Mastery Filter */}
           <div className="flex items-center gap-2 bg-[#f2f4f5] hover:bg-[#eceeef] border border-[#c2c7cc]/50 rounded-xl px-3 py-1.5 text-[13px] font-semibold transition-colors">
             <SlidersHorizontal className="w-3.5 h-3.5 text-[#42474b]" strokeWidth={2} />
             <span className="text-[#42474b] font-bold">Mastery:</span>
-            <select
+            <SelectField
               value={selectedMastery}
-              onChange={(e) => setSelectedMastery(e.target.value)}
-              className="bg-transparent border-none outline-none cursor-pointer pr-1 font-bold text-[#002434]"
-            >
-              <option value="All">All</option>
-              <option value="New">New</option>
-              <option value="Learning">Learning</option>
-              <option value="Familiar">Familiar</option>
-              <option value="Mastered">Mastered</option>
-            </select>
+              onChange={setSelectedMastery}
+              options={masteryOptions}
+              variant="inline-filter"
+            />
           </div>
 
           {/* Reset Button */}
@@ -257,7 +280,13 @@ export function VocabularyList() {
           )}
         </div>
         <div className="text-[13px] text-[#42474b] font-semibold shrink-0">
-          Showing <span className="font-bold text-[#002434] font-mono">{filteredWords.length}</span> of {words.length} words
+          {totalItems > 0 ? (
+            <>
+              Showing <span className="font-bold text-[#002434] font-mono">{startIndex + 1}–{endIndex}</span> of <span className="font-bold text-[#002434] font-mono">{totalItems}</span> words
+            </>
+          ) : (
+            "No words found"
+          )}
         </div>
       </div>
 
@@ -271,8 +300,8 @@ export function VocabularyList() {
       )}
 
       {/* Table Card */}
-      <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl shadow-sm overflow-visible relative z-10">
+        <div className="overflow-x-auto rounded-t-3xl">
           <table className="w-full border-collapse">
             <thead className="bg-[#f8fafb] border-b border-[#c2c7cc]/40">
               <tr>
@@ -298,7 +327,7 @@ export function VocabularyList() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#c2c7cc]/40">
-              {filteredWords.map((item) => (
+              {paginatedWords.map((item) => (
                 <tr
                   key={item.id}
                   onClick={() => navigate('/vocabulary/' + item.id, { state: item })}
@@ -438,6 +467,51 @@ export function VocabularyList() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalItems > 0 && (
+          <div className="px-6 py-4 border-t border-[#c2c7cc]/40 bg-[#f8fafb]/50 flex flex-col sm:flex-row items-center justify-between gap-4 select-none rounded-b-3xl overflow-visible relative z-20">
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-2 text-[13px] font-semibold text-[#42474b]">
+              <span>Words per page:</span>
+              <SelectField
+                value={String(pageSize)}
+                onChange={(val) => {
+                  setPageSize(Number(val));
+                  setCurrentPage(1);
+                }}
+                options={[
+                  { value: '10', label: '10' },
+                  { value: '20', label: '20' },
+                  { value: '30', label: '30' }
+                ]}
+                variant="compact"
+                className="w-16"
+              />
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={activePage === 1}
+                className="h-9 px-3 bg-white border border-[#c2c7cc]/70 text-[#42474b] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold text-[12.5px] cursor-pointer hover:bg-[#f2f4f5] transition-all active:scale-95 shadow-sm"
+              >
+                Previous
+              </button>
+              <div className="text-[13px] font-bold text-[#42474b] px-2">
+                Page <span className="text-[#002434]">{activePage}</span> of {totalPages}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={activePage === totalPages}
+                className="h-9 px-3 bg-white border border-[#c2c7cc]/70 text-[#42474b] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold text-[12.5px] cursor-pointer hover:bg-[#f2f4f5] transition-all active:scale-95 shadow-sm"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <AlertDialog open={wordToDelete !== null} onOpenChange={(open) => !open && setWordToDelete(null)}>

@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, FileText, Loader2, UploadCloud, Settings2 } from
 import { useNavigate } from "react-router";
 import { useState, useRef } from 'react';
 import { analyzeText, extractTextFromFile } from '../../lib/api';
+import { SelectField, type SelectOption } from '../components/ui/SelectField';
 
 export function ImportStep1() {
   const navigate = useNavigate();
@@ -19,6 +20,27 @@ export function ImportStep1() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  const languageOptions: SelectOption[] = [
+    { value: 'German', label: 'German' },
+    { value: 'English', label: 'English' },
+    { value: 'French', label: 'French' },
+    { value: 'Spanish', label: 'Spanish' },
+    { value: 'Japanese', label: 'Japanese' }
+  ];
+
+  const levelOptions: SelectOption[] = [
+    { value: 'Beginner', label: 'Beginner (A1-A2)' },
+    { value: 'Intermediate', label: 'Intermediate (B1-B2)' },
+    { value: 'Advanced', label: 'Advanced (C1-C2)' }
+  ];
+
+  const goalOptions: SelectOption[] = [
+    { value: 'General', label: 'General' },
+    { value: 'Business', label: 'Business' },
+    { value: 'Travel', label: 'Travel' },
+    { value: 'Academic', label: 'Academic' }
+  ];
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
@@ -119,17 +141,11 @@ export function ImportStep1() {
 
           <div className="space-y-2">
             <label className="block text-[13px] font-bold text-slate-550">Target Language</label>
-            <select 
+            <SelectField
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800/50 border border-border/80 rounded-xl text-[14px] focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 transition-all cursor-pointer font-semibold text-slate-700 dark:text-slate-305"
-            >
-              <option>German</option>
-              <option>English</option>
-              <option>French</option>
-              <option>Spanish</option>
-              <option>Japanese</option>
-            </select>
+              onChange={setLanguage}
+              options={languageOptions}
+            />
           </div>
         </div>
 
@@ -142,28 +158,21 @@ export function ImportStep1() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label className="block text-[12px] font-bold text-slate-500">My Level</label>
-              <select 
+              <SelectField
                 value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="w-full h-9 px-3 bg-card border border-border rounded-xl text-[13px] focus:outline-none focus:ring-4 focus:ring-primary/5 cursor-pointer font-semibold text-slate-700 dark:text-slate-350"
-              >
-                <option value="Beginner">Beginner (A1-A2)</option>
-                <option value="Intermediate">Intermediate (B1-B2)</option>
-                <option value="Advanced">Advanced (C1-C2)</option>
-              </select>
+                onChange={setLevel}
+                options={levelOptions}
+                variant="compact"
+              />
             </div>
             <div className="space-y-1.5">
               <label className="block text-[12px] font-bold text-slate-500">Goal</label>
-              <select 
+              <SelectField
                 value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                className="w-full h-9 px-3 bg-card border border-border rounded-xl text-[13px] focus:outline-none focus:ring-4 focus:ring-primary/5 cursor-pointer font-semibold text-slate-700 dark:text-slate-350"
-              >
-                <option>General</option>
-                <option>Business</option>
-                <option>Travel</option>
-                <option>Academic</option>
-              </select>
+                onChange={setGoal}
+                options={goalOptions}
+                variant="compact"
+              />
             </div>
             <div className="space-y-1.5">
               <label className="block text-[12px] font-bold text-slate-500">Max Candidates</label>

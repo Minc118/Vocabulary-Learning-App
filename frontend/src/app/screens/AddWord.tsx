@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useState, useEffect } from 'react';
 import { createWord, enrichWord, fetchCollections, createCollection, type VocabularyWord, type Collection } from '../../lib/api';
 import { speakWord } from '../../lib/speech';
+import { SelectField, type SelectOption } from '../components/ui/SelectField';
 
 export function AddWord() {
   const navigate = useNavigate();
@@ -24,6 +25,28 @@ export function AddWord() {
   const [selectedCollection, setSelectedCollection] = useState('');
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
+
+  const languageOptions: SelectOption[] = [
+    { value: 'English', label: 'English' },
+    { value: 'German', label: 'German' },
+    { value: 'French', label: 'French' },
+    { value: 'Spanish', label: 'Spanish' }
+  ];
+
+  const posOptions: SelectOption[] = [
+    { value: 'Noun', label: 'Noun' },
+    { value: 'Verb', label: 'Verb' },
+    { value: 'Adjective', label: 'Adjective' },
+    { value: 'Adverb', label: 'Adverb' },
+    { value: 'Other', label: 'Other' }
+  ];
+
+  const collectionOptions: SelectOption[] = [
+    { value: '', label: 'None (Standalone)' },
+    ...collections.map(c => ({ value: c.name, label: c.name })),
+    { value: '___CREATE_NEW___', label: '+ Create new collection folder...' }
+  ];
+
 
   useEffect(() => {
     fetchCollections().then(setCollections).catch(console.error);
@@ -160,34 +183,19 @@ export function AddWord() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Language</label>
-                  <select 
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full h-10 px-3 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-semibold text-[#191c1d] focus:outline-none focus:bg-white transition-all duration-200 cursor-pointer"
-                  >
-                    <option>English</option>
-                    <option>German</option>
-                    <option>French</option>
-                    <option>Spanish</option>
-                  </select>
-                </div>
+                <SelectField
+                  value={language}
+                  onChange={setLanguage}
+                  options={languageOptions}
+                  label="Language"
+                />
 
-                <div>
-                  <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Part of Speech</label>
-                  <select 
-                    value={pos}
-                    onChange={(e) => setPos(e.target.value)}
-                    className="w-full h-10 px-3 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-semibold text-[#191c1d] focus:outline-none focus:bg-white transition-all duration-200 cursor-pointer"
-                  >
-                    <option>Noun</option>
-                    <option>Verb</option>
-                    <option>Adjective</option>
-                    <option>Adverb</option>
-                    <option>Other</option>
-                  </select>
-                </div>
+                <SelectField
+                  value={pos}
+                  onChange={setPos}
+                  options={posOptions}
+                  label="Part of Speech"
+                />
               </div>
 
               <div>
@@ -229,7 +237,6 @@ export function AddWord() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[11.5px] font-bold text-[#42474b] uppercase tracking-wider mb-2 select-none">Destination Collection</label>
                 {isCreatingCollection ? (
                   <div className="flex gap-2">
                     <input
@@ -265,23 +272,18 @@ export function AddWord() {
                     </button>
                   </div>
                 ) : (
-                  <select 
+                  <SelectField
                     value={selectedCollection}
-                    onChange={(e) => {
-                      if (e.target.value === '___CREATE_NEW___') {
+                    onChange={(val) => {
+                      if (val === '___CREATE_NEW___') {
                         setIsCreatingCollection(true);
                       } else {
-                        setSelectedCollection(e.target.value);
+                        setSelectedCollection(val);
                       }
                     }}
-                    className="w-full h-10 px-3 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-semibold text-[#191c1d] focus:outline-none focus:bg-white transition-all duration-200 cursor-pointer"
-                  >
-                    <option value="">None (Standalone)</option>
-                    {collections.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
-                    ))}
-                    <option value="___CREATE_NEW___">+ Create new collection folder...</option>
-                  </select>
+                    options={collectionOptions}
+                    label="Destination Collection"
+                  />
                 )}
               </div>
 

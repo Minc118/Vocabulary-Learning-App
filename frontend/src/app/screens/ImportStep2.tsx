@@ -141,7 +141,7 @@ export function ImportStep2() {
     .filter(item => !hideExisting || !item.existing);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6 h-[calc(100vh-100px)] flex flex-col overflow-hidden bg-[#f8fafb] animate-in fade-in-50 duration-200 text-[#191c1d]">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 lg:h-[calc(100vh-100px)] flex flex-col lg:overflow-hidden bg-[#f8fafb] animate-in fade-in-50 duration-200 text-[#191c1d]">
       
       {/* Top Bar Navigation */}
       <div className="shrink-0 flex items-center justify-between border-b border-[#c2c7cc]/50 pb-4.5">
@@ -168,10 +168,10 @@ export function ImportStep2() {
       </div>
 
       {/* Workspace Arena: Split Screen Viewport */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-8 overflow-hidden min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-8 lg:overflow-hidden min-h-0">
         
         {/* Left Side: Monospace Source Immersion Panel (Span 2) */}
-        <div className="lg:col-span-2 flex flex-col h-full min-h-0 bg-[#f2f4f5] border border-[#c2c7cc]/65 rounded-2xl shadow-sm overflow-hidden">
+        <div className="lg:col-span-2 flex flex-col lg:h-full lg:min-h-0 min-h-[350px] bg-[#f2f4f5] border border-[#c2c7cc]/65 rounded-2xl shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-[#c2c7cc]/60 bg-[#eceeef]/60 shrink-0">
             <h3 className="font-bold text-[14.5px] text-[#191c1d] flex items-center gap-2">
               <BookOpen className="w-4.5 h-4.5 text-[#002434]" strokeWidth={2} />
@@ -187,7 +187,7 @@ export function ImportStep2() {
         </div>
 
         {/* Right Side: Candidate Feeds & Tools (Span 3) */}
-        <div className="lg:col-span-3 flex flex-col h-full min-h-0 space-y-4">
+        <div className="lg:col-span-3 flex flex-col lg:h-full lg:min-h-0 space-y-4">
           
           {/* Toolbar controllers */}
           <div className="shrink-0 flex flex-wrap items-center gap-3">
@@ -241,7 +241,7 @@ export function ImportStep2() {
           )}
 
           {/* Candidate scroll feed list */}
-          <div className="flex-1 overflow-y-auto pr-1 space-y-3 min-h-0">
+          <div className="flex-1 lg:overflow-y-auto pr-1 space-y-3 lg:min-h-0">
             {visibleCandidates.length === 0 ? (
               <div className="text-center py-20 bg-white border border-[#c2c7cc]/65 border-dashed rounded-2xl shadow-sm">
                 <p className="text-[14px] text-[#42474b] font-semibold">No candidate words match your current filter settings.</p>

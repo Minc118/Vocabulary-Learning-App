@@ -17,6 +17,7 @@ import {
 import { useNavigate, useLocation } from "react-router";
 import { useState, useEffect } from 'react';
 import { enrichWord, bulkEnrichWords, createWord, fetchCollections, createCollection, type Collection } from '../../lib/api';
+import { SelectField, type SelectOption } from '../components/ui/SelectField';
 
 export function ImportStep3() {
   const navigate = useNavigate();
@@ -38,6 +39,23 @@ export function ImportStep3() {
   
   const [tags, setTags] = useState(''); // kept for backward compatibility / references
   
+  const collectionOptions: SelectOption[] = [
+    { value: '', label: 'None (Library Root)' },
+    ...collections.map(c => ({ value: c.name, label: c.name })),
+    { value: '___CREATE_NEW___', label: '+ Create new collection...' }
+  ];
+
+  const posOptions: SelectOption[] = [
+    { value: 'Noun', label: 'Noun' },
+    { value: 'Verb', label: 'Verb' },
+    { value: 'Adjective', label: 'Adjective' },
+    { value: 'Adverb', label: 'Adverb' },
+    { value: 'Pronoun', label: 'Pronoun' },
+    { value: 'Preposition', label: 'Preposition' },
+    { value: 'Conjunction', label: 'Conjunction' },
+    { value: 'Interjection', label: 'Interjection' }
+  ];
+
   const [isEnriching, setIsEnriching] = useState(true);
   const [enrichedCount, setEnrichedCount] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -243,7 +261,7 @@ export function ImportStep3() {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-6 bg-[#f8fafb] animate-in fade-in-50 duration-200 text-[#191c1d] pb-28">
+    <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6 bg-[#f8fafb] animate-in fade-in-50 duration-200 text-[#191c1d] pb-28">
       {/* Top Bar Navigation */}
       <div className="shrink-0 flex items-center justify-between border-b border-[#c2c7cc]/50 pb-4.5">
         <div className="flex items-center gap-4">
@@ -352,23 +370,17 @@ export function ImportStep3() {
                 </button>
               </div>
             ) : (
-              <select 
+              <SelectField
                 value={selectedCollection}
-                onChange={(e) => {
-                  if (e.target.value === '___CREATE_NEW___') {
+                onChange={(val) => {
+                  if (val === '___CREATE_NEW___') {
                     setIsCreatingCollection(true);
                   } else {
-                    setSelectedCollection(e.target.value);
+                    setSelectedCollection(val);
                   }
                 }}
-                className="w-full h-10 px-3 bg-[#f8fafb] border border-[#c2c7cc] rounded-xl text-[13.5px] focus:outline-none focus:border-[#002434] focus:ring-2 focus:ring-[#002434]/10 transition-all cursor-pointer font-bold text-[#42474b]"
-              >
-                <option value="">None (Library Root)</option>
-                {collections.map(c => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-                <option value="___CREATE_NEW___">+ Create new collection...</option>
-              </select>
+                options={collectionOptions}
+              />
             )}
             <p className="text-[11.5px] text-[#42474b] font-semibold">
               Words will be imported to the selected folder workspace.
@@ -483,20 +495,12 @@ export function ImportStep3() {
                       {/* POS */}
                       <div className="space-y-1.5">
                         <label className="block text-[11px] font-bold text-[#42474b] uppercase tracking-wider">Part of Speech</label>
-                        <select
+                        <SelectField
                           value={draftWord.pos || 'Noun'}
-                          onChange={(e) => updateDraftField('pos', e.target.value)}
-                          className="w-full h-9 px-2 bg-white border border-[#c2c7cc] rounded-lg text-[13px] focus:outline-none focus:border-[#002434] transition-all font-semibold text-[#42474b]"
-                        >
-                          <option value="Noun">Noun</option>
-                          <option value="Verb">Verb</option>
-                          <option value="Adjective">Adjective</option>
-                          <option value="Adverb">Adverb</option>
-                          <option value="Pronoun">Pronoun</option>
-                          <option value="Preposition">Preposition</option>
-                          <option value="Conjunction">Conjunction</option>
-                          <option value="Interjection">Interjection</option>
-                        </select>
+                          onChange={(val) => updateDraftField('pos', val)}
+                          options={posOptions}
+                          variant="compact"
+                        />
                       </div>
                     </div>
 
@@ -578,7 +582,7 @@ export function ImportStep3() {
 
             return (
               <div key={i} className="bg-white border border-[#c2c7cc]/60 rounded-2xl overflow-hidden shadow-sm transition-all hover:border-[#002434]/25">
-                <button
+                <div
                   onClick={() => toggleExpand(i)}
                   className="w-full px-6 py-4.5 flex items-center justify-between hover:bg-[#f2f4f5]/30 transition-colors text-left cursor-pointer select-none"
                 >
@@ -626,7 +630,7 @@ export function ImportStep3() {
                       )}
                     </div>
                   </div>
-                </button>
+                </div>
 
                 {isExpanded && (
                   <div className="px-6 pb-6 pt-3.5 border-t border-[#c2c7cc]/50 bg-[#f2f4f5]/15 space-y-5 animate-in slide-in-from-top-1 duration-150">
@@ -716,9 +720,9 @@ export function ImportStep3() {
       </div>
 
       {/* Sticky Bottom Action Footer */}
-      <div className="fixed bottom-0 left-0 right-0 h-20 bg-[#f2f4f5]/90 backdrop-blur-md border-t border-[#c2c7cc]/65 px-8 flex items-center justify-between z-10 shadow-lg animate-in slide-in-from-bottom-5 duration-300">
-        <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
-          <div className="text-[13.5px] font-bold text-[#42474b]">
+      <div className="sticky bottom-0 -mx-4 px-4 sm:-mx-8 sm:px-8 h-20 bg-[#f2f4f5]/90 backdrop-blur-md border-t border-[#c2c7cc]/65 flex items-center justify-between z-10 shadow-lg animate-in slide-in-from-bottom-5 duration-300 mt-8">
+        <div className="max-w-5xl mx-auto w-full flex items-center justify-center sm:justify-between gap-3.5">
+          <div className="hidden sm:block text-[13.5px] font-bold text-[#42474b]">
             Reviewing <span className="font-mono text-[#002434] font-bold bg-[#002434]/5 px-2 py-0.5 rounded border border-[#002434]/10">{words.length}</span> terms in total
           </div>
           <div className="flex gap-3.5">

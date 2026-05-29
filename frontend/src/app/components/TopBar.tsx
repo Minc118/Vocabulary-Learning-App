@@ -1,21 +1,32 @@
-import { Search, Bell, User, LogOut } from 'lucide-react';
+import React from 'react';
+import { Search, Bell, User, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface TopBarProps {
   isNavCollapsed: boolean;
+  onToggleMobileMenu?: () => void;
 }
 
-export function TopBar({ isNavCollapsed }: TopBarProps) {
+export function TopBar({ isNavCollapsed, onToggleMobileMenu }: TopBarProps) {
   const { signOut, user } = useAuth();
   
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
   const fullName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email;
 
   return (
-    <header className={`h-16 border-b border-border/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md fixed top-0 right-0 ${isNavCollapsed ? 'left-16' : 'left-56'} z-10 transition-all duration-300`}>
-      <div className="h-full px-8 flex items-center justify-between">
-        <div className="flex-1 max-w-md">
-          <div className="relative group">
+    <header className={`h-16 border-b border-border/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md fixed top-0 right-0 left-0 ${isNavCollapsed ? 'lg:left-16' : 'lg:left-56'} z-20 transition-all duration-300`}>
+      <div className="h-full px-4 sm:px-8 flex items-center justify-between gap-4">
+        <div className="flex-1 max-w-md flex items-center gap-3">
+          {onToggleMobileMenu && (
+            <button
+              onClick={onToggleMobileMenu}
+              className="lg:hidden p-1.5 rounded-xl hover:bg-slate-100 text-[#42474b] active:scale-95 transition-all cursor-pointer"
+              title="Toggle Navigation Menu"
+            >
+              <Menu className="w-5.5 h-5.5" strokeWidth={1.5} />
+            </button>
+          )}
+          <div className="flex-1 relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" strokeWidth={1.5} />
             <input
               type="text"
