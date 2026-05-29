@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router';
+import { Analytics } from '@vercel/analytics/react';
 import { MainLayout } from './MainLayout';
 import { Dashboard } from './screens/Dashboard';
 import { VocabularyList } from './screens/VocabularyList';
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
+      <Analytics />
     </BrowserRouter>
   </AuthProvider>
   );
