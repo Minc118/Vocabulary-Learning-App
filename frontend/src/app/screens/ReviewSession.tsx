@@ -86,7 +86,7 @@ export function ReviewSession() {
       const others = q.filter(w => w.id !== word.id).map(w => w.word);
       const distractors = others.sort(() => 0.5 - Math.random()).slice(0, 3);
       if (distractors.length < 3) {
-        distractors.push('Lorem', 'Ipsum', 'Dolor').slice(0, 3 - distractors.length);
+        distractors.push('Example', 'Target', 'Context').slice(0, 3 - distractors.length);
       }
       setMcOptions([...distractors, word.word].sort(() => 0.5 - Math.random()));
     }
@@ -152,18 +152,18 @@ export function ReviewSession() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="mt-4 text-muted-foreground">Loading review session...</p>
+      <div className="fixed inset-0 bg-[#f8fafb] dark:bg-slate-900 flex flex-col items-center justify-center space-y-3 z-50">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" strokeWidth={1.5} />
+        <p className="text-[14px] text-muted-foreground font-semibold">Initiating recall workspace...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-8 text-center">
-        <p className="text-destructive font-medium mb-4">{error}</p>
-        <button onClick={() => navigate('/review')} className="px-6 py-2 bg-primary text-primary-foreground rounded-lg">
+      <div className="fixed inset-0 bg-[#f8fafb] dark:bg-slate-900 flex flex-col items-center justify-center p-8 text-center space-y-4 z-50">
+        <p className="text-rose-600 dark:text-rose-400 font-bold max-w-sm">{error}</p>
+        <button onClick={() => navigate('/review')} className="h-10 px-5 bg-primary text-primary-foreground rounded-xl font-bold cursor-pointer transition-all active:scale-95 shadow-md shadow-primary/5">
           Back to Review Hub
         </button>
       </div>
@@ -172,10 +172,10 @@ export function ReviewSession() {
 
   if (queue.length === 0) {
     return (
-      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-8 text-center">
-        <h2 className="text-2xl font-medium mb-2">No Reviews Due</h2>
-        <p className="text-muted-foreground mb-6">You are all caught up for now!</p>
-        <button onClick={() => navigate('/review')} className="px-6 py-2 bg-primary text-primary-foreground rounded-lg">
+      <div className="fixed inset-0 bg-[#f8fafb] dark:bg-slate-900 flex flex-col items-center justify-center p-8 text-center space-y-4 z-50 animate-in fade-in-50 duration-200">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Review Queue Caught Up!</h2>
+        <p className="text-muted-foreground max-w-xs font-semibold leading-relaxed">No reviews scheduled at this threshold. Keep building your vocabulary dictionary!</p>
+        <button onClick={() => navigate('/review')} className="h-10 px-5 bg-primary text-primary-foreground rounded-xl font-bold cursor-pointer transition-all active:scale-95 shadow-md shadow-primary/5">
           Back to Review Hub
         </button>
       </div>
@@ -189,60 +189,62 @@ export function ReviewSession() {
   const progress = (currentCardNumber / totalCards) * 100;
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col">
-      {/* Header */}
-      <div className="h-16 border-b border-border flex items-center justify-between px-8">
-        <div className="flex items-center gap-4">
-          <div className="text-[14px] text-muted-foreground">
-            {currentCardNumber} / {totalCards}
+    <div className="fixed inset-0 bg-[#f8fafb] dark:bg-slate-950 flex flex-col z-50 animate-in fade-in-50 duration-200">
+      {/* Absolute high-fidelity glass navbar */}
+      <div className="h-16 border-b border-border/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-8 z-20">
+        <div className="flex items-center gap-5">
+          <div className="text-[13.5px] font-bold text-slate-500">
+            Card {currentCardNumber} of {totalCards}
           </div>
-          <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }}></div>
+          <div className="w-44 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-border/20">
+            <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
           </div>
-          <div className="text-[14px] text-muted-foreground ml-2 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 animate-pulse text-primary" strokeWidth={1.5} />
-            <span className="font-mono">{formatTime(elapsedSeconds)}</span>
+          <div className="text-[13px] font-semibold text-slate-500 ml-2 flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-lg border border-border/30">
+            <Clock className="w-3.5 h-3.5 text-primary" strokeWidth={2} />
+            <span className="font-mono font-bold">{formatTime(elapsedSeconds)}</span>
           </div>
         </div>
         <button
           onClick={() => navigate('/review')}
-          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-accent transition-colors"
+          className="w-9 h-9 flex items-center justify-center rounded-xl border border-border hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-450 hover:text-slate-700 dark:hover:text-white transition-all cursor-pointer shadow-sm active:scale-95"
+          title="Exit Session"
         >
-          <X className="w-5 h-5" strokeWidth={1.5} />
+          <X className="w-4.5 h-4.5" strokeWidth={2} />
         </button>
       </div>
 
-      {/* Card */}
-      <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
+      {/* Main Study Arena */}
+      <div className="flex-1 flex items-center justify-center p-6 md:p-8 overflow-y-auto relative z-10">
         <div className="w-full max-w-2xl">
           {!revealed ? (
-            <div className="bg-card border border-border rounded-2xl p-12 text-center shadow-sm">
-              <div className="text-[13px] text-muted-foreground mb-4 uppercase tracking-wide">
-                {currentWord.language} → Target Language
+            <div className="bg-card border border-border rounded-2xl p-10 md:p-12 text-center shadow-lg shadow-black/5 animate-in fade-in-50 duration-300">
+              <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-6 flex items-center justify-center gap-1">
+                <span>{currentWord.language}</span>
+                <span>•</span>
+                <span>Active Recall</span>
               </div>
               
               {currentMode === 'flashcard' && (
-                <>
-                  <div className="flex flex-col items-center mb-8">
-                    <div className="flex items-baseline justify-center w-full mb-1">
-                      <div className="w-10 h-10 pointer-events-none opacity-0" aria-hidden="true" />
-                      <span className="text-[48px] font-medium leading-none mx-2">{currentWord.word}</span>
+                <div className="space-y-8">
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center justify-center w-full gap-3 flex-wrap">
+                      <span className="text-[40px] md:text-[46px] font-bold text-slate-900 dark:text-white tracking-tight leading-none">{currentWord.word}</span>
                       <button
                         onClick={() => speakWord(currentWord.word, currentWord.language)}
-                        className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all cursor-pointer shadow-sm active:scale-90"
                         title="Pronounce"
                       >
-                        <Volume2 className="w-6 h-6" strokeWidth={1.5} />
+                        <Volume2 className="w-5 h-5" strokeWidth={1.5} />
                       </button>
                     </div>
                     {currentWord.ipa && (
-                      <div className="text-[15px] font-mono text-muted-foreground mt-1.5 mb-1">
+                      <div className="text-[14px] font-mono text-primary bg-primary/5 border border-primary/10 rounded-md px-2 py-0.5 mt-3">
                         /{currentWord.ipa.replace(/^\/|\/$/g, '')}/
                       </div>
                     )}
                     {currentWord.pos && (
-                      <div className="mt-2">
-                        <span className="px-2.5 py-0.5 bg-muted rounded text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
+                      <div className="mt-3">
+                        <span className="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-border/50 rounded-md text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           {currentWord.pos}
                         </span>
                       </div>
@@ -250,32 +252,32 @@ export function ReviewSession() {
                   </div>
                   <button
                     onClick={() => setRevealed(true)}
-                    className="h-12 px-8 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-[15px] font-medium"
+                    className="h-12 px-8 bg-[#002434] hover:bg-[#0a3346] text-white rounded-xl transition-all text-[14.5px] font-bold shadow-md shadow-black/10 active:scale-95 cursor-pointer"
                   >
-                    Show Answer
+                    Reveal Definition
                   </button>
-                </>
+                </div>
               )}
 
               {currentMode === 'multipleChoice' && (
-                <>
-                  <div className="text-[20px] font-medium mb-8 text-left leading-relaxed">
+                <div className="space-y-8">
+                  <div className="text-[17px] md:text-[19px] font-bold text-slate-800 dark:text-slate-150 text-left leading-relaxed pl-4 border-l-3 border-primary/30 py-1.5 bg-slate-50/50 dark:bg-slate-800/20 rounded-r-xl pr-4">
                     {currentWord.definition || currentWord.translation || "No definition available."}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                     {mcOptions.map((opt, i) => {
                       const isCorrect = opt === currentWord.word;
                       const isSelectedWrong = opt === selectedWrongOption;
                       const hasSelectedAnyWrong = selectedWrongOption !== null;
 
-                      let buttonStyle = "bg-accent/50 hover:bg-accent border-border";
+                      let buttonStyle = "bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 border-border/80 text-slate-800 dark:text-slate-200";
                       if (hasSelectedAnyWrong) {
                         if (isCorrect) {
-                          buttonStyle = "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:bg-emerald-500/5 dark:border-emerald-500/20 dark:text-emerald-400";
+                          buttonStyle = "bg-emerald-500/10 border-emerald-500/35 text-emerald-700 dark:text-emerald-400";
                         } else if (isSelectedWrong) {
-                          buttonStyle = "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:bg-rose-500/5 dark:border-rose-500/20 dark:text-rose-400";
+                          buttonStyle = "bg-rose-500/10 border-rose-500/35 text-rose-700 dark:text-rose-400";
                         } else {
-                          buttonStyle = "opacity-40 border-border bg-accent/20 cursor-not-allowed";
+                          buttonStyle = "opacity-40 border-border/40 bg-slate-50/40 cursor-not-allowed";
                         }
                       }
 
@@ -291,7 +293,7 @@ export function ReviewSession() {
                               setIsReinforced(true);
                             }
                           }}
-                          className={`h-14 border rounded-xl font-medium text-[16px] transition-all cursor-pointer ${buttonStyle}`}
+                          className={`h-14 border rounded-xl font-bold text-[15.5px] transition-all cursor-pointer flex items-center justify-center px-4 ${buttonStyle} active:scale-98`}
                         >
                           {opt}
                         </button>
@@ -300,44 +302,44 @@ export function ReviewSession() {
                   </div>
 
                   {selectedWrongOption !== null && (
-                    <div className="mt-6 p-5 rounded-xl border border-rose-500/15 bg-rose-500/5 dark:bg-rose-500/5 text-left animate-in fade-in-50 duration-200">
-                      <div className="text-[14px] text-rose-800 dark:text-rose-300 font-medium mb-1 flex items-center gap-2">
-                        <span>Not quite! The correct answer is</span>
-                        <span className="font-semibold px-2 py-0.5 bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 rounded-sm border border-emerald-500/10">
+                    <div className="mt-6 p-5 rounded-2xl border border-rose-200/50 bg-rose-50 text-left animate-in fade-in-50 duration-200 space-y-3">
+                      <div className="text-[13.5px] text-rose-800 font-bold flex items-center gap-2 flex-wrap">
+                        <span>Not quite! The correct answer is:</span>
+                        <span className="font-mono bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-lg border border-emerald-200/50 font-bold">
                           {currentWord.word}
                         </span>
                       </div>
-                      <p className="text-[13px] text-muted-foreground mt-1.5 leading-relaxed">
+                      <p className="text-[12.5px] text-rose-600 font-medium leading-relaxed">
                         {isReinforced 
-                          ? "We've marked this word for reinforcement to ensure you see it again soon." 
-                          : "Reinforcement undone. This card will be processed normally when you continue."}
+                          ? "We've scheduled this term for reinforcement review in this session." 
+                          : "Reinforcement disabled. Normal processing is active."}
                       </p>
                       
-                      <div className="mt-4 flex gap-2">
+                      <div className="flex gap-2 pt-2 border-t border-rose-200/40">
                         <button
                           type="button"
                           onClick={() => setIsReinforced(!isReinforced)}
-                          className="h-9 px-4 rounded-lg border border-border text-[13px] hover:bg-accent font-medium transition-colors cursor-pointer"
+                          className="h-9 px-3.5 rounded-lg border border-rose-200 bg-white text-rose-700 text-[12.5px] hover:bg-rose-50 font-bold transition-all cursor-pointer"
                         >
-                          {isReinforced ? "Undo Reinforcement" : "Mark for Reinforcement"}
+                          {isReinforced ? "Cancel Reinforce" : "Reinforce Term"}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleAnswer(isReinforced ? 'again' : 'good')}
                           disabled={isSubmitting}
-                          className="h-9 px-5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 text-[13px] font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors min-w-[90px]"
+                          className="h-9 px-4.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[12.5px] font-bold flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
                         >
                           {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Continue'}
                         </button>
                       </div>
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {currentMode === 'spelling' && (
-                <>
-                  <div className="text-[20px] font-medium mb-8 text-center leading-relaxed">
+                <div className="space-y-8">
+                  <div className="text-[17px] md:text-[19px] font-bold text-slate-850 dark:text-slate-100 leading-relaxed text-center max-w-lg mx-auto bg-slate-50 dark:bg-slate-800/20 p-5 rounded-2xl border border-border/40">
                     {currentWord.definition || currentWord.translation || "No definition available."}
                   </div>
                   <form 
@@ -347,88 +349,91 @@ export function ReviewSession() {
                         setRevealed(true);
                       } else {
                         setSpellError(true);
-                        setTimeout(() => setSpellError(false), 1000);
+                        setTimeout(() => setSpellError(false), 800);
                       }
                     }}
-                    className="max-w-xs mx-auto space-y-4"
+                    className="max-w-xs mx-auto space-y-4 pt-2"
                   >
                     <input
                       type="text"
                       autoFocus
-                      placeholder="Type the word..."
+                      placeholder="Spell the word..."
                       value={spellInput}
                       onChange={(e) => setSpellInput(e.target.value)}
-                      className={`w-full h-14 bg-background border ${spellError ? 'border-red-500' : 'border-input'} rounded-xl px-4 text-[18px] text-center focus:outline-none focus:ring-2 focus:ring-primary/20`}
+                      className={`w-full h-14 bg-slate-50 dark:bg-slate-800/50 border ${spellError ? 'border-rose-500 focus:ring-rose-500/20' : 'border-border/80 focus:border-primary/20'} rounded-2xl px-4 text-[19px] font-bold text-center focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all`}
                     />
                     <button
                       type="submit"
-                      className="w-full h-12 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-[15px] font-medium"
+                      className="w-full h-12 bg-[#002434] hover:bg-[#0a3346] text-white rounded-xl font-bold transition-all text-[14px] cursor-pointer shadow-md shadow-black/10 active:scale-98"
                     >
-                      Check Spelling
+                      Verify Spelling
                     </button>
                   </form>
                   <button 
                     onClick={() => setRevealed(true)}
-                    className="mt-6 text-[13px] text-muted-foreground hover:text-foreground underline"
+                    className="text-[13px] text-slate-450 hover:text-slate-700 dark:hover:text-slate-200 underline font-semibold cursor-pointer"
                   >
                     I don't know (Reveal)
                   </button>
-                </>
+                </div>
               )}
             </div>
           ) : (
-            <div className="bg-card border border-border rounded-2xl p-10 shadow-sm space-y-6">
-              {/* Card Main Info */}
-              <div className="text-center pb-6 border-b border-border/50">
-                <div className="text-[13px] text-muted-foreground mb-4 uppercase tracking-wide">
-                  {displayWord.language} → Target Language
+            <div className="bg-card border border-border rounded-2xl p-6 md:p-10 shadow-lg shadow-black/5 space-y-6 md:space-y-8 animate-in fade-in-50 duration-300 max-h-[70vh] overflow-y-auto">
+              {/* Card Header Information */}
+              <div className="text-center pb-6 border-b border-border/80">
+                <div className="text-[12px] text-slate-400 font-bold uppercase tracking-wider mb-4 flex items-center justify-center gap-1">
+                  <span>{displayWord.language}</span>
+                  <span>•</span>
+                  <span>Target Details</span>
                 </div>
-                <div className="flex items-baseline justify-center w-full mb-3">
-                  <div className="w-10 h-10 pointer-events-none opacity-0" aria-hidden="true" />
-                  <span className="text-[44px] font-medium leading-none mx-2">{displayWord.word}</span>
+                <div className="flex items-center justify-center w-full gap-3 flex-wrap mb-3.5">
+                  <span className="text-[36px] md:text-[42px] font-bold text-slate-900 dark:text-white tracking-tight leading-none">{displayWord.word}</span>
                   <button
                     onClick={() => speakWord(displayWord.word, displayWord.language)}
-                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all cursor-pointer shadow-sm active:scale-90"
                     title="Pronounce"
                   >
-                    <Volume2 className="w-6 h-6" strokeWidth={1.5} />
+                    <Volume2 className="w-5 h-5" strokeWidth={1.5} />
                   </button>
                 </div>
                 {displayWord.ipa && (
-                  <div className="text-[15px] font-mono text-muted-foreground -mt-1.5 mb-3">
+                  <div className="text-[14px] font-mono text-primary bg-primary/5 border border-primary/10 rounded-md px-2.5 py-0.5 inline-block mb-3.5">
                     /{displayWord.ipa.replace(/^\/|\/$/g, '')}/
                   </div>
                 )}
                 {displayWord.pos && (
                   <div className="mb-3.5">
-                    <span className="px-2.5 py-0.5 bg-muted rounded text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
+                    <span className="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-border/50 rounded-md text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                       {displayWord.pos}
                     </span>
                   </div>
                 )}
-                <div className="text-[22px] font-medium text-foreground">{displayWord.translation}</div>
+                <div className="text-[20px] font-bold text-slate-800 dark:text-slate-100 mt-2">{displayWord.translation}</div>
               </div>
 
-              {/* Rich Details */}
-              <div className="space-y-5 text-left">
+              {/* Rich Linguistic Contents */}
+              <div className="space-y-6 text-left">
                 {displayWord.definition && (
-                  <div>
-                    <div className="text-[11px] text-muted-foreground mb-2 uppercase tracking-wide">Definition</div>
-                    <div className="text-[14.5px] leading-relaxed text-foreground/90">
+                  <div className="space-y-2">
+                    <div className="text-[11.5px] text-slate-450 font-bold uppercase tracking-wider">Definition</div>
+                    <div className="text-[14.5px] leading-relaxed text-slate-800 dark:text-slate-200 font-medium">
                       {displayWord.definition}
                     </div>
                   </div>
                 )}
 
                 {displayWord.examples && displayWord.examples.length > 0 && (
-                  <div>
-                    <div className="text-[11px] text-muted-foreground mb-2.5 uppercase tracking-wide">Example Sentences</div>
+                  <div className="space-y-3.5">
+                    <div className="text-[11.5px] text-slate-450 font-bold uppercase tracking-wider">Examples Sentences</div>
                     <div className="space-y-3">
                       {displayWord.examples.map((ex, idx) => (
-                        <div key={idx} className="pl-3.5 border-l-2 border-primary/30 py-0.5">
-                          <div className="text-[14.5px] leading-relaxed text-foreground">{typeof ex === 'object' ? ex.sentence : ex}</div>
+                        <div key={idx} className="pl-3.5 border-l-2 border-teal-500/40 py-0.5 space-y-0.5">
+                          <div className="text-[14.5px] leading-relaxed font-semibold text-slate-900 dark:text-white">
+                            {typeof ex === 'object' ? ex.sentence : ex}
+                          </div>
                           {typeof ex === 'object' && ex.translation && (
-                            <div className="text-[13px] text-muted-foreground mt-0.5">{ex.translation}</div>
+                            <div className="text-[13px] text-muted-foreground font-semibold">{ex.translation}</div>
                           )}
                         </div>
                       ))}
@@ -437,11 +442,11 @@ export function ReviewSession() {
                 )}
 
                 {displayWord.collocations && displayWord.collocations.length > 0 && (
-                  <div>
-                    <div className="text-[11px] text-muted-foreground mb-2 uppercase tracking-wide">Common Collocations</div>
+                  <div className="space-y-2.5">
+                    <div className="text-[11.5px] text-slate-450 font-bold uppercase tracking-wider">Common Collocations</div>
                     <div className="flex flex-wrap gap-1.5">
                       {displayWord.collocations.map((item, i) => (
-                        <span key={i} className="px-2.5 py-1 bg-muted rounded text-[13px] text-foreground border border-border">
+                        <span key={i} className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-[13px] font-semibold text-slate-700 dark:text-slate-300 border border-border/40">
                           {item}
                         </span>
                       ))}
@@ -450,13 +455,13 @@ export function ReviewSession() {
                 )}
 
                 {(displayWord.synonyms?.length > 0 || displayWord.relatedWords?.length > 0) && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {displayWord.synonyms && displayWord.synonyms.length > 0 && (
-                      <div>
-                        <div className="text-[11px] text-muted-foreground mb-2 uppercase tracking-wide">Synonyms</div>
+                      <div className="space-y-2">
+                        <div className="text-[11.5px] text-slate-450 font-bold uppercase tracking-wider">Synonyms</div>
                         <div className="flex flex-wrap gap-1.5">
                           {displayWord.synonyms.map((item, i) => (
-                            <span key={i} className="px-2.5 py-1 bg-muted rounded text-[13px] text-foreground border border-border">
+                            <span key={i} className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-[12.5px] font-semibold text-slate-700 dark:text-slate-350 border border-border/40">
                               {item}
                             </span>
                           ))}
@@ -464,11 +469,11 @@ export function ReviewSession() {
                       </div>
                     )}
                     {displayWord.relatedWords && displayWord.relatedWords.length > 0 && (
-                      <div>
-                        <div className="text-[11px] text-muted-foreground mb-2 uppercase tracking-wide">Related Words</div>
+                      <div className="space-y-2">
+                        <div className="text-[11.5px] text-slate-450 font-bold uppercase tracking-wider">Related Words</div>
                         <div className="flex flex-wrap gap-1.5">
                           {displayWord.relatedWords.map((item, i) => (
-                            <span key={i} className="px-2.5 py-1 bg-muted rounded text-[13px] text-muted-foreground border border-border">
+                            <span key={i} className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-[12.5px] font-semibold text-slate-450 border border-border/40">
                               {item}
                             </span>
                           ))}
@@ -479,14 +484,14 @@ export function ReviewSession() {
                 )}
 
                 {(displayWord.collection || (displayWord.tags && displayWord.tags.length > 0)) && (
-                  <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border/50">
+                  <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border/80">
                     {displayWord.collection && (
-                      <span className="px-2 py-0.5 bg-accent text-accent-foreground text-[11px] font-medium rounded border border-border uppercase tracking-wider">
+                      <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 border border-border/40">
                         {displayWord.collection}
                       </span>
                     )}
                     {displayWord.tags && displayWord.tags.map((tag, i) => (
-                      <span key={i} className="px-2 py-0.5 bg-primary/10 text-primary text-[11px] font-medium rounded border border-primary/5 uppercase tracking-wider">
+                      <span key={i} className="px-2.5 py-1 bg-primary/5 text-primary rounded-lg text-[11px] font-bold uppercase tracking-wider border border-primary/5">
                         {tag}
                       </span>
                     ))}
@@ -498,43 +503,43 @@ export function ReviewSession() {
         </div>
       </div>
 
-      {/* Rating Buttons */}
+      {/* High-fidelity Rating Buttons */}
       {revealed && (
-        <div className="border-t border-border p-8">
+        <div className="border-t border-border/80 bg-white dark:bg-slate-900 p-6 md:p-8 relative z-20">
           <div className="max-w-2xl mx-auto">
-            <div className="text-[13px] text-muted-foreground text-center mb-4">How well did you recall this word?</div>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="text-[12.5px] text-slate-500 font-semibold text-center mb-4 uppercase tracking-wider">Rate your recall ability</div>
+            <div className="grid grid-cols-4 gap-3.5">
               <button 
                 onClick={() => handleAnswer('again')}
                 disabled={isSubmitting}
-                className="h-14 rounded-lg bg-rose-500/5 border border-rose-500/10 hover:bg-rose-500/10 transition-colors disabled:opacity-50 cursor-pointer flex flex-col items-center justify-center"
+                className="h-14 rounded-xl bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/15 hover:border-rose-500/25 transition-all disabled:opacity-50 cursor-pointer flex flex-col items-center justify-center shadow-sm active:scale-95"
               >
-                <div className="text-[15px] font-medium text-rose-700 dark:text-rose-400">Again</div>
-                <div className="text-[11px] text-rose-600 dark:text-rose-500 mt-0.5">Soon</div>
+                <div className="text-[14.5px] font-bold text-rose-700 dark:text-rose-450">Again</div>
+                <div className="text-[10px] text-rose-500 font-bold uppercase tracking-wider mt-0.5">Soon</div>
               </button>
               <button 
                 onClick={() => handleAnswer('hard')}
                 disabled={isSubmitting}
-                className="h-14 rounded-lg bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/10 transition-colors disabled:opacity-50 cursor-pointer flex flex-col items-center justify-center"
+                className="h-14 rounded-xl bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/15 hover:border-amber-500/25 transition-all disabled:opacity-50 cursor-pointer flex flex-col items-center justify-center shadow-sm active:scale-95"
               >
-                <div className="text-[15px] font-medium text-amber-700 dark:text-amber-400">Hard</div>
-                <div className="text-[11px] text-amber-600 dark:text-amber-500 mt-0.5">Tomorrow</div>
+                <div className="text-[14.5px] font-bold text-amber-700 dark:text-amber-450">Hard</div>
+                <div className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mt-0.5">1 Day</div>
               </button>
               <button 
                 onClick={() => handleAnswer('good')}
                 disabled={isSubmitting}
-                className="h-14 rounded-lg bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors disabled:opacity-50 cursor-pointer flex flex-col items-center justify-center"
+                className="h-14 rounded-xl bg-[#002434]/5 hover:bg-[#002434]/10 border border-[#002434]/15 hover:border-[#002434]/25 dark:bg-sky-500/5 dark:hover:bg-sky-500/10 dark:border-sky-500/15 transition-all disabled:opacity-50 cursor-pointer flex flex-col items-center justify-center shadow-sm active:scale-95"
               >
-                <div className="text-[15px] font-medium text-primary">Good</div>
-                <div className="text-[11px] text-primary/80 mt-0.5 font-normal">Few days</div>
+                <div className="text-[14.5px] font-bold text-[#002434] dark:text-sky-400">Good</div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-0.5">3 Days</div>
               </button>
               <button 
                 onClick={() => handleAnswer('easy')}
                 disabled={isSubmitting}
-                className="h-14 rounded-lg bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/10 transition-colors disabled:opacity-50 cursor-pointer flex flex-col items-center justify-center"
+                className="h-14 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/15 hover:border-emerald-500/25 transition-all disabled:opacity-50 cursor-pointer flex flex-col items-center justify-center shadow-sm active:scale-95"
               >
-                <div className="text-[15px] font-medium text-emerald-700 dark:text-emerald-400">Easy</div>
-                <div className="text-[11px] text-emerald-600 dark:text-emerald-500 mt-0.5">Later</div>
+                <div className="text-[14.5px] font-bold text-emerald-700 dark:text-emerald-450">Easy</div>
+                <div className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider mt-0.5">7 Days</div>
               </button>
             </div>
           </div>

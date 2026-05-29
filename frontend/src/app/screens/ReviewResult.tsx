@@ -18,66 +18,72 @@ export function ReviewResult() {
   };
 
   return (
-    <div className="p-8">
-      <div className="max-w-2xl mx-auto text-center">
-        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 className="w-8 h-8 text-green-600" strokeWidth={1.5} />
+    <div className="p-8 max-w-4xl mx-auto animate-in fade-in-50 duration-200">
+      <div className="max-w-2xl mx-auto text-center py-8">
+        {/* Glow-ring completed icon */}
+        <div className="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 flex items-center justify-center mx-auto mb-6 shadow-md shadow-emerald-500/5 animate-pulse">
+          <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
         </div>
 
-        <h1 className="text-[32px] font-medium tracking-tight mb-2">Session Complete</h1>
-        <p className="text-muted-foreground text-[15px] mb-8">Great work! You've completed your review session.</p>
+        <h1 className="text-[34px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight mb-2">Recall Session Complete</h1>
+        <p className="text-muted-foreground text-[15px] font-semibold mb-10 max-w-sm mx-auto leading-relaxed">
+          “Bring your words, learn smarter.” Excellent work updating your vocabulary review queue!
+        </p>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="text-[36px] font-medium mb-1">{reviewedCount}</div>
-            <div className="text-[13px] text-muted-foreground">Cards reviewed</div>
+        {/* Scorecard widgets */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+            <div className="text-[12px] text-slate-450 font-bold uppercase tracking-wider mb-2">Reviewed</div>
+            <div className="text-[36px] font-bold text-slate-900 dark:text-white leading-none">{reviewedCount}</div>
+            <div className="text-[12px] text-muted-foreground font-semibold mt-2.5">Cards processed</div>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-green-600" strokeWidth={1.5} />
-              <div className="text-[36px] font-medium">{accuracy}%</div>
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+            <div className="text-[12px] text-slate-450 font-bold uppercase tracking-wider mb-2">Accuracy</div>
+            <div className="flex items-center justify-center gap-1">
+              <TrendingUp className="w-5 h-5 text-teal-500" strokeWidth={2.5} />
+              <span className="text-[36px] font-bold text-slate-900 dark:text-white leading-none">{accuracy}%</span>
             </div>
-            <div className="text-[13px] text-muted-foreground">Accuracy</div>
+            <div className="text-[12px] text-muted-foreground font-semibold mt-2.5">Correct response rate</div>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Clock className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
-              <div className="text-[36px] font-medium">{formatTime(elapsedSeconds)}</div>
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+            <div className="text-[12px] text-slate-450 font-bold uppercase tracking-wider mb-2">Time Spent</div>
+            <div className="flex items-center justify-center gap-1.5">
+              <Clock className="w-5 h-5 text-slate-400" strokeWidth={2} />
+              <span className="text-[36px] font-bold text-slate-900 dark:text-white leading-none font-mono">{formatTime(elapsedSeconds)}</span>
             </div>
-            <div className="text-[13px] text-muted-foreground">Time spent</div>
+            <div className="text-[12px] text-muted-foreground font-semibold mt-2.5">Active session time</div>
           </div>
         </div>
 
-        {/* Detail Breakdown */}
-        <div className="max-w-md mx-auto bg-card border border-border rounded-xl p-4 mb-8 flex justify-around text-[13px]">
+        {/* Detail Breakdown Panel */}
+        <div className="max-w-md mx-auto bg-card border border-border rounded-2xl p-5 mb-10 flex justify-around text-[13.5px] shadow-sm">
           <div className="text-center">
-            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{correctCount}</span>
-            <span className="text-muted-foreground ml-1.5">Correct (Good/Easy)</span>
+            <div className="text-emerald-600 dark:text-emerald-400 font-bold text-[18px]">{correctCount}</div>
+            <span className="text-slate-500 font-semibold mt-1 block">Correct responses</span>
           </div>
-          <div className="w-px bg-border h-5 self-center"></div>
+          <div className="w-px bg-border h-8 self-center"></div>
           <div className="text-center">
-            <span className="text-rose-600 dark:text-rose-400 font-semibold">{incorrectCount}</span>
-            <span className="text-muted-foreground ml-1.5">Incorrect (Again/Hard)</span>
+            <div className="text-rose-600 dark:text-rose-450 font-bold text-[18px]">{incorrectCount}</div>
+            <span className="text-slate-500 font-semibold mt-1 block">Incorrect responses</span>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 justify-center mt-12">
+        {/* Action Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12 max-w-sm mx-auto">
           <button
             onClick={() => navigate('/')}
-            className="h-11 px-6 border border-border rounded-lg hover:bg-accent transition-colors text-[14px]"
+            className="w-full h-11 px-6 border border-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-350 font-bold transition-all text-[14px] cursor-pointer"
           >
-            Return to Dashboard
+            Dashboard
           </button>
           <button
             onClick={() => navigate('/review')}
-            className="h-11 px-6 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-[14px] flex items-center gap-2"
+            className="w-full h-11 px-6 bg-primary hover:bg-[#0a3346] text-primary-foreground font-bold rounded-xl transition-all text-[14px] flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-primary/5 active:scale-95"
           >
-            <RotateCcw className="w-4 h-4" strokeWidth={2} />
-            Review Again
+            <RotateCcw className="w-4 h-4" strokeWidth={2.5} />
+            <span>Practice Again</span>
           </button>
         </div>
       </div>
