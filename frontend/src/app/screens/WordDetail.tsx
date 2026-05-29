@@ -14,10 +14,6 @@ import {
   AlertDialogCancel,
 } from '../components/ui/alert-dialog';
 
-interface WordDetailProps {
-  data?: Partial<VocabularyWord>;
-}
-
 export function WordDetail() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,7 +24,7 @@ export function WordDetail() {
     word: '...',
     ipa: '',
     translation: '...',
-    pos: 'noun',
+    pos: 'Noun',
     language: 'English',
     tags: [],
     nextReview: 'Today',
@@ -148,9 +144,7 @@ export function WordDetail() {
     setIsSaving(true);
     setLoadError(null);
     try {
-      const updated = await updateWord(word.id, editForm);
-      // Backend returns full word including relation IDs, but we might need to map it properly or just fetch again.
-      // Easiest is to update the simple fields locally and re-fetch to be safe.
+      await updateWord(word.id, editForm);
       setWord(prev => ({ ...prev, ...editForm }));
       setIsEditing(false);
     } catch (err) {
@@ -161,161 +155,217 @@ export function WordDetail() {
   };
 
   return (
-    <div className="p-8">
-      <div className="max-w-6xl mx-auto">
-        <button
-          onClick={() => navigate('/vocabulary')}
-          className="flex items-center gap-2 text-[14px] text-muted-foreground hover:text-foreground transition-colors mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
-          Back to Vocabulary
-        </button>
-
-        {(isLoading || loadError) && (
-          <div
-            className={`mb-6 rounded-lg border px-4 py-3 text-[13px] ${
-              loadError
-                ? 'border-destructive/20 bg-destructive/5 text-destructive'
-                : 'border-border bg-muted/30 text-muted-foreground'
-            }`}
+    <div className="p-8 max-w-7xl mx-auto space-y-8 bg-[#f8fafb] animate-in fade-in-50 duration-200 text-[#191c1d] pb-24 min-h-screen">
+      {/* Header Back & Action Control */}
+      <div className="shrink-0 border-b border-[#c2c7cc]/50 pb-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <button
+            onClick={() => navigate('/vocabulary')}
+            className="h-9 px-3.5 bg-white border border-[#c2c7cc]/70 text-[#42474b] hover:bg-[#f2f4f5] rounded-xl font-bold text-[13px] inline-flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 transition-all select-none mb-3"
           >
-            {loadError || 'Loading word details from the Flask service...'}
+            <ArrowLeft className="w-4 h-4 text-[#42474b]" strokeWidth={2.5} />
+            <span>Back to Library</span>
+          </button>
+          <div className="text-[#42474b] font-bold tracking-wider text-[10px] uppercase select-none">
+            Dictionary Repository Card
           </div>
-        )}
+          <h1 className="text-[26px] font-extrabold tracking-tight text-[#191c1d] leading-none mt-1">Word Detail</h1>
+          <p className="text-[13.5px] text-[#42474b] font-semibold mt-2">Spaced learning metadata entry properties & AI details.</p>
+        </div>
 
-        <div className="grid grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="col-span-2 space-y-6">
-            <div className="bg-card border border-border rounded-lg p-8">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  {isEditing ? (
-                    <div className="space-y-3 mb-2">
+        {/* Action controls */}
+        <div className="flex gap-3">
+          {isEditing ? (
+            <>
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="h-10 px-4 bg-white border border-[#c2c7cc]/70 text-[#42474b] hover:bg-[#f2f4f5] rounded-xl font-bold text-[13px] cursor-pointer select-none active:scale-95 transition-all shadow-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSaveEdit}
+                disabled={isSaving}
+                className="h-10 px-4 bg-[#f2f4f5] border border-[#002434]/40 hover:bg-[#eceeef] hover:border-[#002434]/60 text-[#002434] rounded-xl transition-all font-bold text-[13px] flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 select-none disabled:opacity-50"
+              >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-[#002434]" strokeWidth={2.5} /> : 'Save Changes'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={handleEditClick} 
+                className="h-10 px-4 bg-[#f2f4f5] border border-[#002434]/40 hover:bg-[#eceeef] hover:border-[#002434]/60 text-[#002434] rounded-xl transition-all font-bold text-[13px] flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 select-none"
+              >
+                <Edit2 className="w-4 h-4 text-[#002434]" strokeWidth={2.5} />
+                <span>Edit Word</span>
+              </button>
+              <button 
+                onClick={handleDeleteClick}
+                disabled={isDeleting}
+                className="h-10 px-4 bg-rose-50 border border-rose-200 hover:bg-rose-100/70 text-rose-700 rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 cursor-pointer select-none active:scale-95 shadow-sm disabled:opacity-50"
+              >
+                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin text-rose-700" strokeWidth={2.5} /> : <Trash2 className="w-4 h-4 text-rose-700" strokeWidth={2.5} />}
+                <span>Delete</span>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {(isLoading || loadError) && (
+        <div
+          className={`rounded-2xl border p-5 text-[13.5px] ${
+            loadError
+              ? 'border-rose-200 bg-rose-50 text-rose-800'
+              : 'border-[#c2c7cc]/50 bg-white text-[#42474b] animate-pulse font-semibold'
+          }`}
+        >
+          {loadError ? (
+            <div className="space-y-1">
+              <div className="font-extrabold">Failed to load word details</div>
+              <div className="text-[13px] text-rose-700 font-semibold">{loadError}</div>
+            </div>
+          ) : (
+            'Loading word entries from Flask REST API database...'
+          )}
+        </div>
+      )}
+
+      {/* Main 2-Column Split Layout */}
+      {!isLoading && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* Left Column (60% width span 2) */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-8 shadow-sm space-y-6">
+              {/* Word Header details */}
+              <div className="space-y-4">
+                {isEditing ? (
+                  <div className="space-y-4 pt-2">
+                    <div>
+                      <label className="block text-[11px] text-[#42474b] font-bold uppercase tracking-wider mb-1.5">Word *</label>
                       <input 
+                        type="text"
                         value={editForm.word || ''}
                         onChange={e => setEditForm({ ...editForm, word: e.target.value })}
-                        className="text-[30px] font-medium w-full bg-input-background border border-border rounded px-2 focus:outline-none"
+                        className="w-full h-10 px-3.5 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[14px] text-[#191c1d] font-semibold placeholder:text-[#42474b]/50 focus:outline-none focus:bg-white transition-all duration-200"
                         placeholder="Word"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-[#42474b] font-bold uppercase tracking-wider mb-1.5">IPA Phonetic Key</label>
                       <input 
+                        type="text"
                         value={editForm.ipa || ''}
                         onChange={e => setEditForm({ ...editForm, ipa: e.target.value })}
-                        className="text-[14px] font-mono w-full bg-input-background border border-border rounded px-2 py-1 focus:outline-none placeholder:font-sans"
-                        placeholder="IPA / Phonetic (e.g. /ˈtrɪɡər/)"
+                        className="w-full h-10 px-3.5 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-mono text-[#191c1d] font-semibold placeholder:text-[#42474b]/50 focus:outline-none focus:bg-white transition-all duration-200"
+                        placeholder="e.g. /ˈtrɪɡər/"
                       />
-                      <div className="flex gap-2">
-                        <input 
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] text-[#42474b] font-bold uppercase tracking-wider mb-1.5">Part of Speech</label>
+                        <select 
                           value={editForm.pos || ''}
                           onChange={e => setEditForm({ ...editForm, pos: e.target.value })}
-                          className="px-2 py-1 bg-input-background border border-border rounded text-[13px] w-24 focus:outline-none"
-                          placeholder="Part of speech"
-                        />
-                        <input 
+                          className="w-full h-10 px-3 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-semibold text-[#191c1d] focus:outline-none focus:bg-white transition-all duration-200 cursor-pointer"
+                        >
+                          <option>Noun</option>
+                          <option>Verb</option>
+                          <option>Adjective</option>
+                          <option>Adverb</option>
+                          <option>Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-[#42474b] font-bold uppercase tracking-wider mb-1.5">Language</label>
+                        <select 
                           value={editForm.language || ''}
                           onChange={e => setEditForm({ ...editForm, language: e.target.value })}
-                          className="px-2 py-1 bg-input-background border border-border rounded text-[13px] w-24 focus:outline-none"
-                          placeholder="Language"
-                        />
+                          className="w-full h-10 px-3 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[13.5px] font-semibold text-[#191c1d] focus:outline-none focus:bg-white transition-all duration-200 cursor-pointer"
+                        >
+                          <option>English</option>
+                          <option>German</option>
+                          <option>French</option>
+                          <option>Spanish</option>
+                        </select>
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-[#42474b] font-bold uppercase tracking-wider mb-1.5">Translation / Primary Meaning</label>
                       <input 
+                        type="text"
                         value={editForm.translation || ''}
                         onChange={e => setEditForm({ ...editForm, translation: e.target.value })}
-                        className="text-[16px] text-muted-foreground w-full bg-input-background border border-border rounded px-2 focus:outline-none"
-                        placeholder="Translation"
+                        className="w-full h-10 px-3.5 bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl text-[14px] text-[#191c1d] font-semibold placeholder:text-[#42474b]/50 focus:outline-none focus:bg-white transition-all duration-200"
+                        placeholder="Meaning"
                       />
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2.5 mb-2">
-                        <div className="text-[36px] font-medium">{word.word}</div>
-                        <button
-                          onClick={() => speakWord(word.word, word.language)}
-                          className="w-9 h-9 inline-flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors translate-y-[3.5px]"
-                          title="Pronounce"
-                        >
-                          <Volume2 className="w-5.5 h-5.5" strokeWidth={1.5} />
-                        </button>
-                      </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3.5 flex-wrap">
+                      <h2 className="text-[36px] font-extrabold tracking-tight text-[#002434] leading-none">{word.word}</h2>
+                      <button
+                        onClick={() => speakWord(word.word, word.language)}
+                        className="w-9 h-9 inline-flex items-center justify-center rounded-xl bg-[#002434]/5 border border-[#002434]/10 hover:bg-[#002434]/10 text-[#002434] transition-all cursor-pointer shadow-sm active:scale-95"
+                        title="Pronounce Word"
+                      >
+                        <Volume2 className="w-4.5 h-4.5 text-[#002434]" strokeWidth={2.5} />
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
                       {word.ipa && (
-                        <div className="text-[15px] font-mono text-primary bg-primary/5 border border-primary/10 rounded-md px-2.5 py-0.5 w-fit mt-1.5 mb-3.5 flex items-center gap-1.5">
-                          <span className="text-[10px] font-sans font-medium uppercase tracking-wider text-muted-foreground">IPA:</span>
-                          <span>/{word.ipa.replace(/^\/|\/$/g, '')}/</span>
-                        </div>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#002434]/5 border border-[#002434]/10 rounded-lg font-mono text-[12px] font-bold text-[#002434] select-all">
+                          /{word.ipa.replace(/^\/|\/$/g, '')}/
+                        </span>
                       )}
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="px-3 py-1 bg-muted rounded-lg text-[13px] font-medium text-muted-foreground">{word.pos || 'Unknown'}</span>
-                        <span className="px-3 py-1 bg-muted rounded-lg text-[13px] text-muted-foreground">{word.language}</span>
-                      </div>
-                      <div className="text-[18px] font-medium text-foreground mt-1">{word.translation}</div>
-                    </>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  {isEditing ? (
-                    <>
-                      <button 
-                        onClick={() => setIsEditing(false)}
-                        className="px-3 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent transition-colors text-[13px]"
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        onClick={handleSaveEdit}
-                        disabled={isSaving}
-                        className="px-3 h-9 flex items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-[13px] disabled:opacity-50"
-                      >
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={handleEditClick} className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent transition-colors">
-                      <Edit2 className="w-4 h-4" strokeWidth={1.5} />
-                    </button>
-                  )}
-                  {!isEditing && (
-                    <button 
-                      onClick={handleDeleteClick}
-                      disabled={isDeleting}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50 cursor-pointer"
-                    >
-                      {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" strokeWidth={1.5} />}
-                    </button>
-                  )}
-                </div>
+                      <span className="px-2.5 py-0.5 bg-[#eceeef] border border-[#c2c7cc]/50 rounded-lg text-[10.5px] font-bold uppercase tracking-wider text-[#42474b] select-none">
+                        {word.pos || 'Unknown'}
+                      </span>
+                      <span className="px-2.5 py-0.5 bg-[#eceeef] border border-[#c2c7cc]/50 rounded-lg text-[10.5px] font-bold uppercase tracking-wider text-[#42474b] select-none">
+                        {word.language}
+                      </span>
+                    </div>
+
+                    <div className="text-[17px] font-extrabold text-[#002434] bg-[#f2f4f5] px-4 py-3 rounded-2xl border border-[#c2c7cc]/30 max-w-xl select-all mt-3.5">
+                      <span className="text-[11px] block font-bold uppercase tracking-wider text-slate-400 mb-1 select-none font-sans">Translation</span>
+                      {word.translation}
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div className="space-y-6">
+              {/* Core dictionary details */}
+              <div className="space-y-6 pt-5 border-t border-[#c2c7cc]/40">
                 {isEditing ? (
-                  <div>
-                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                      Definition
-                    </div>
+                  <div className="space-y-2">
+                    <label className="block text-[11px] text-[#42474b] font-bold uppercase tracking-wider mb-1">Dictionary Definition</label>
                     <textarea 
                       value={editForm.definition || ''}
                       onChange={e => setEditForm({ ...editForm, definition: e.target.value })}
-                      className="w-full bg-input-background border border-border rounded-lg p-3 text-[14px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring/20 min-h-[100px]"
+                      className="w-full bg-[#f2f4f5] border border-transparent focus:border-[#002434]/30 rounded-xl p-3.5 text-[13.5px] leading-relaxed focus:outline-none focus:bg-white transition-all duration-200 min-h-[100px] text-[#191c1d] font-semibold resize-none placeholder:text-[#42474b]/50"
+                      placeholder="Enter core dictionary definition..."
                     />
                   </div>
-                ) : word.definition && (
-                  <div>
-                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                      Definition
-                    </div>
-                    <div className="text-[15px] leading-relaxed">{word.definition}</div>
+                ) : word.definition ? (
+                  <div className="space-y-2 select-all">
+                    <h3 className="text-[10px] font-bold text-[#42474b]/80 uppercase tracking-wider select-none">Definition</h3>
+                    <p className="text-[14.5px] leading-relaxed text-[#191c1d] font-semibold max-w-3xl">{word.definition}</p>
                   </div>
-                )}
+                ) : null}
 
-                {word.examples.length > 0 && (
-                  <div>
-                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                      Example Sentences
-                    </div>
-                    <div className="space-y-3">
+                {/* Example Sentences */}
+                {word.examples && word.examples.length > 0 && (
+                  <div className="space-y-3.5 select-all">
+                    <h3 className="text-[10px] font-bold text-[#42474b]/80 uppercase tracking-wider select-none">Example Sentences</h3>
+                    <div className="space-y-4">
                       {word.examples.map((example, index) => (
-                        <div key={index} className="pl-4 border-l-2 border-primary/30">
-                          <div className="text-[15px] leading-relaxed">{example.sentence}</div>
+                        <div key={index} className="pl-4.5 border-l-[3px] border-[#002434]/30 space-y-1">
+                          <div className="text-[15px] leading-relaxed font-bold text-[#191c1d]">{example.sentence}</div>
                           {example.translation && (
-                            <div className="text-[14px] text-muted-foreground mt-1">{example.translation}</div>
+                            <div className="text-[13px] text-[#42474b] font-semibold">{example.translation}</div>
                           )}
                         </div>
                       ))}
@@ -323,14 +373,16 @@ export function WordDetail() {
                   </div>
                 )}
 
-                {word.collocations.length > 0 && (
-                  <div>
-                    <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                      Common Collocations
-                    </div>
+                {/* Linguistic Collocations chips */}
+                {word.collocations && word.collocations.length > 0 && (
+                  <div className="space-y-2.5">
+                    <h3 className="text-[10px] font-bold text-[#42474b]/80 uppercase tracking-wider select-none">Common Collocations</h3>
                     <div className="flex flex-wrap gap-2">
                       {word.collocations.map((item, i) => (
-                        <span key={i} className="px-3 py-2 bg-muted rounded-lg text-[14px]">
+                        <span 
+                          key={i} 
+                          className="px-3 py-1.5 bg-[#002434]/5 border border-[#002434]/10 rounded-xl text-[12.5px] font-bold text-[#002434]"
+                        >
                           {item}
                         </span>
                       ))}
@@ -338,15 +390,17 @@ export function WordDetail() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-6">
-                  {word.synonyms.length > 0 && (
-                    <div>
-                      <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                        Synonyms
-                      </div>
+                {/* Synonyms & Relatives */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                  {word.synonyms && word.synonyms.length > 0 && (
+                    <div className="space-y-2.5">
+                      <h3 className="text-[10px] font-bold text-[#42474b]/80 uppercase tracking-wider select-none">Synonyms</h3>
                       <div className="flex flex-wrap gap-2">
                         {word.synonyms.map((item, i) => (
-                          <span key={i} className="px-3 py-2 bg-muted rounded-lg text-[14px]">
+                          <span 
+                            key={i} 
+                            className="px-3 py-1.5 bg-[#002434]/5 border border-[#002434]/10 rounded-xl text-[12.5px] font-bold text-[#002434]"
+                          >
                             {item}
                           </span>
                         ))}
@@ -354,14 +408,15 @@ export function WordDetail() {
                     </div>
                   )}
 
-                  {word.relatedWords.length > 0 && (
-                    <div>
-                      <div className="text-[13px] font-medium text-muted-foreground mb-3 uppercase tracking-wide">
-                        Related Words
-                      </div>
+                  {word.relatedWords && word.relatedWords.length > 0 && (
+                    <div className="space-y-2.5">
+                      <h3 className="text-[10px] font-bold text-[#42474b]/80 uppercase tracking-wider select-none">Related Words</h3>
                       <div className="flex flex-wrap gap-2">
                         {word.relatedWords.map((item, i) => (
-                          <span key={i} className="px-3 py-2 bg-muted rounded-lg text-[14px]">
+                          <span 
+                            key={i} 
+                            className="px-3 py-1.5 bg-[#002434]/5 border border-[#002434]/10 rounded-xl text-[12.5px] font-bold text-[#002434]"
+                          >
                             {item}
                           </span>
                         ))}
@@ -373,69 +428,80 @@ export function WordDetail() {
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Right Column (40% width / Span 1) */}
           <div className="space-y-6">
-            <div className="bg-card border border-border rounded-lg p-5">
-              <h3 className="font-medium text-[15px] mb-4">Learning Status</h3>
-              <div className="space-y-4">
+            {/* Spaced Learning Progression Card */}
+            <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6 shadow-sm space-y-4">
+              <h3 className="font-extrabold text-[15px] text-[#002434] tracking-tight">Learning Performance</h3>
+              <div className="space-y-4.5 pt-1">
                 <div>
-                  <div className="text-[13px] text-muted-foreground mb-1">Mastery Level</div>
-                  <div className="text-[15px] font-medium">{word.mastery || 'Learning'}</div>
-                  <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
+                  <div className="flex items-center justify-between text-[12.5px] font-bold text-[#42474b] mb-2 select-none">
+                    <span>Mastery Level</span>
+                    <span className="text-[#002434]">{word.mastery || 'Learning'}</span>
+                  </div>
+                  <div className="h-2 bg-[#f2f4f5] border border-[#c2c7cc]/20 rounded-full overflow-hidden">
                     <div
-                      className={`h-full ${
+                      className={`h-full rounded-full transition-all duration-300 ${
                         word.mastery === 'Mastered'
-                          ? 'bg-green-500 w-full'
+                          ? 'bg-emerald-500 w-full'
                           : word.mastery === 'Familiar'
                           ? 'bg-blue-500 w-2/3'
-                          : 'bg-primary w-1/3'
+                          : 'bg-orange-500 w-1/3'
                       }`}
                     ></div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 pt-2">
-                  <Clock className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+                <div className="flex items-center gap-3 pt-3.5 border-t border-[#c2c7cc]/40 select-none">
+                  <div className="w-8 h-8 rounded-xl bg-[#f2f4f5] border border-[#c2c7cc]/40 flex items-center justify-center">
+                    <Clock className="w-4 h-4 text-slate-550" strokeWidth={2} />
+                  </div>
                   <div>
-                    <div className="text-[13px] text-muted-foreground">Next Review</div>
-                    <div className="text-[14px] font-medium">{word.nextReview || 'Not scheduled'}</div>
+                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Next Scheduled Review</div>
+                    <div className="text-[13px] font-extrabold text-[#002434] mt-0.5">{word.nextReview || 'Not scheduled'}</div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+                <div className="flex items-center gap-3 select-none">
+                  <div className="w-8 h-8 rounded-xl bg-[#f2f4f5] border border-[#c2c7cc]/40 flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-slate-550" strokeWidth={2} />
+                  </div>
                   <div>
-                    <div className="text-[13px] text-muted-foreground">Review Count</div>
-                    <div className="text-[14px] font-medium">{word.reviewCount || 0} times</div>
+                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Total Review Count</div>
+                    <div className="text-[13px] font-extrabold text-[#002434] mt-0.5">{word.reviewCount || 0} recalls</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-5">
-              <h3 className="font-medium text-[15px] mb-4">Organization</h3>
-              <div className="space-y-4">
+            {/* Folder / Tags Organization Card */}
+            <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6 shadow-sm space-y-4 select-none">
+              <h3 className="font-extrabold text-[15px] text-[#002434] tracking-tight">Organization</h3>
+              <div className="space-y-4 pt-1">
                 {word.collection && (
                   <div>
-                    <div className="flex items-center gap-2 text-[13px] text-muted-foreground mb-2">
-                      <FolderOpen className="w-3.5 h-3.5" strokeWidth={1.5} />
-                      Collections
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-2">
+                      <FolderOpen className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
+                      Collection Folder
                     </div>
-                    <div className="space-y-1.5">
-                      <div className="px-3 py-2 bg-muted rounded-lg text-[13px]">{word.collection}</div>
+                    <div className="px-3.5 py-2 bg-[#f2f4f5] border border-[#c2c7cc]/50 rounded-xl text-[13px] font-bold text-[#42474b]">
+                      {word.collection}
                     </div>
                   </div>
                 )}
 
-                {word.tags.length > 0 && (
+                {word.tags && word.tags.length > 0 && (
                   <div>
-                    <div className="flex items-center gap-2 text-[13px] text-muted-foreground mb-2">
-                      <Tag className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-2">
+                      <Tag className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
                       Tags
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {(word.tags || []).map((tag, i) => (
-                        <span key={i} className="px-2.5 py-1 bg-primary/10 text-primary rounded text-[12px] font-medium">
+                        <span 
+                          key={i} 
+                          className="px-2.5 py-0.5 bg-[#002434]/5 border border-[#002434]/10 rounded-lg text-[11px] font-bold text-[#002434]"
+                        >
                           {tag}
                         </span>
                       ))}
@@ -445,27 +511,44 @@ export function WordDetail() {
               </div>
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-5">
-              <h3 className="font-medium text-[15px] mb-4">Source</h3>
-              <div className="text-[13px] text-muted-foreground mb-1">Added from</div>
-              <div className="text-[14px]">{word.source || 'Manual input'}</div>
-              {word.addedAt && <div className="text-[13px] text-muted-foreground mt-3">{word.addedAt}</div>}
+            {/* Origins Card */}
+            <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6 shadow-sm space-y-4 select-none">
+              <h3 className="font-extrabold text-[15px] text-[#002434] tracking-tight">Origin</h3>
+              <div className="pt-1 space-y-3.5 text-[13px] font-bold text-[#42474b]">
+                <div>
+                  <span className="text-slate-450 block text-[10px] uppercase tracking-wider mb-0.5">Source Material</span>
+                  <span className="text-[13px] text-[#002434] font-extrabold">{word.source || 'Manual input'}</span>
+                </div>
+                {word.addedAt && (
+                  <div>
+                    <span className="text-slate-450 block text-[10px] uppercase tracking-wider mb-0.5">Created At</span>
+                    <span className="text-[13px] text-[#002434] font-extrabold">
+                      {new Date(word.addedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
+      {/* AlertDialog Delete Confirmation */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6 shadow-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Word</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete the word <strong className="font-semibold text-foreground">"{word.word}"</strong>? This action cannot be undone.
+            <AlertDialogTitle className="text-[17px] font-extrabold text-[#191c1d] tracking-tight">Delete Word</AlertDialogTitle>
+            <AlertDialogDescription className="text-[13.5px] text-[#42474b] font-semibold leading-relaxed">
+              Are you sure you want to delete the word <strong className="font-bold text-[#002434]">"{word.word}"</strong>? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting} onClick={() => setIsDeleteDialogOpen(false)} className="cursor-pointer">
+          <AlertDialogFooter className="gap-3 mt-4">
+            <AlertDialogCancel 
+              disabled={isDeleting} 
+              onClick={() => setIsDeleteDialogOpen(false)} 
+              className="h-10 px-4 bg-white border border-[#c2c7cc]/70 text-[#42474b] hover:bg-[#f2f4f5] rounded-xl font-bold text-[13px] cursor-pointer select-none active:scale-95 shadow-sm transition-all"
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -474,9 +557,9 @@ export function WordDetail() {
                 e.preventDefault();
                 handleDeleteConfirm();
               }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
+              className="h-10 px-5 bg-rose-50 border border-rose-200 hover:bg-rose-100/70 text-rose-700 rounded-xl font-bold text-[13px] cursor-pointer flex items-center justify-center gap-2 select-none active:scale-95 shadow-sm transition-all"
             >
-              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin text-rose-700" strokeWidth={2.5} /> : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

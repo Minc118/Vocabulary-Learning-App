@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router';
 import { Navigation } from './components/Navigation';
 import { TopBar } from './components/TopBar';
@@ -7,12 +7,22 @@ import { Loader2 } from 'lucide-react';
 
 export function MainLayout() {
   const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const location = useLocation();
   const { session, loading } = useAuth();
 
   const handleToggleNav = () => {
     setIsNavCollapsed(!isNavCollapsed);
   };
+
+  const handleToggleMobileNav = () => {
+    setIsMobileNavOpen(!isMobileNavOpen);
+  };
+
+  // Auto-close mobile drawer when location/pathname changes
+  useEffect(() => {
+    setIsMobileNavOpen(false);
+  }, [location.pathname]);
 
   const isReviewSession = location.pathname.startsWith('/review/session');
 
@@ -35,11 +45,16 @@ export function MainLayout() {
           <Navigation
             isCollapsed={isNavCollapsed}
             onToggleCollapse={handleToggleNav}
+            isMobileOpen={isMobileNavOpen}
+            onCloseMobile={() => setIsMobileNavOpen(false)}
           />
-          <TopBar isNavCollapsed={isNavCollapsed} />
+          <TopBar
+            isNavCollapsed={isNavCollapsed}
+            onToggleMobileMenu={handleToggleMobileNav}
+          />
         </>
       )}
-      <main className={isReviewSession ? '' : `${isNavCollapsed ? 'ml-16' : 'ml-56'} mt-16 transition-all duration-300`}>
+      <main className={isReviewSession ? '' : `mt-16 transition-all duration-300 ml-0 ${isNavCollapsed ? 'lg:ml-16' : 'lg:ml-56'}`}>
         <Outlet />
       </main>
     </div>

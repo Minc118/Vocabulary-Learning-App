@@ -1,4 +1,4 @@
-import { Plus, Upload, RotateCcw, TrendingUp, Book, Target, FolderOpen } from 'lucide-react';
+import { Plus, Upload, RotateCcw, TrendingUp, Book, Target, FolderOpen, Clock } from 'lucide-react';
 import { useNavigate } from "react-router";
 import { useState, useEffect } from 'react';
 import { fetchStats, fetchWords, fetchCollections, type VocabularyWord } from '../../lib/api';
@@ -121,50 +121,47 @@ export function Dashboard() {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-6 animate-pulse">
+      <div className="p-8 space-y-6 animate-pulse bg-[#f8fafb] min-h-screen">
         {/* Title */}
-        <div className="space-y-2">
-          <div className="h-8 bg-muted rounded w-1/4"></div>
-          <div className="h-4 bg-muted rounded w-1/3"></div>
+        <div className="space-y-2 border-b border-[#c2c7cc]/50 pb-5">
+          <div className="h-6 bg-slate-200 rounded w-1/4"></div>
+          <div className="h-4 bg-slate-200 rounded w-1/3 mt-2"></div>
         </div>
 
         {/* Hero Card Skeleton */}
-        <div className="h-48 bg-muted rounded-xl"></div>
+        <div className="h-44 bg-slate-200 rounded-3xl border border-[#c2c7cc]/50"></div>
 
         {/* Quick Actions Skeleton */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="h-32 bg-muted rounded-lg"></div>
-          <div className="h-32 bg-muted rounded-lg"></div>
-          <div className="h-32 bg-muted rounded-lg"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="h-40 bg-slate-200 rounded-3xl border border-[#c2c7cc]/50"></div>
+          <div className="h-40 bg-slate-200 rounded-3xl border border-[#c2c7cc]/50"></div>
+          <div className="h-40 bg-slate-200 rounded-3xl border border-[#c2c7cc]/50"></div>
         </div>
 
         {/* Stats Skeleton */}
-        <div className="grid grid-cols-4 gap-4">
-          <div className="h-24 bg-muted rounded-lg"></div>
-          <div className="h-24 bg-muted rounded-lg"></div>
-          <div className="h-24 bg-muted rounded-lg"></div>
-          <div className="h-24 bg-muted rounded-lg"></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="h-24 bg-slate-200 rounded-2xl border border-[#c2c7cc]/50"></div>
+          <div className="h-24 bg-slate-200 rounded-2xl border border-[#c2c7cc]/50"></div>
+          <div className="h-24 bg-slate-200 rounded-2xl border border-[#c2c7cc]/50"></div>
+          <div className="h-24 bg-slate-200 rounded-2xl border border-[#c2c7cc]/50"></div>
         </div>
-
-        {/* Recent Words Skeleton */}
-        <div className="h-56 bg-muted rounded-lg"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8 space-y-6">
-        <div>
-          <h1 className="text-[28px] font-medium tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-[14px] mt-1">Your learning overview</p>
+      <div className="p-8 space-y-6 bg-[#f8fafb] min-h-screen text-[#191c1d]">
+        <div className="border-b border-[#c2c7cc]/50 pb-5">
+          <h1 className="text-[26px] font-extrabold tracking-tight">Dashboard</h1>
+          <p className="text-[#42474b] text-[13.5px] mt-1 font-semibold">Your learning overview</p>
         </div>
-        <div className="bg-destructive/10 text-destructive p-5 rounded-lg border border-destructive/20 space-y-2">
-          <h3 className="font-semibold text-[15px]">Error Loading Dashboard</h3>
-          <p className="text-[13px]">{error}</p>
+        <div className="bg-rose-50 text-rose-800 p-6 rounded-2xl border border-rose-200/50 space-y-3.5 shadow-sm max-w-lg">
+          <h3 className="font-extrabold text-[15px]">Error Loading Dashboard</h3>
+          <p className="text-[13px] font-semibold leading-relaxed">{error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="mt-3 px-4 py-2 bg-destructive text-white rounded text-[13px] font-medium hover:bg-destructive/90 transition-colors"
+            className="h-10 px-5 border border-rose-600 bg-white hover:bg-rose-50 text-rose-700 font-bold rounded-xl transition-all text-[13px] cursor-pointer select-none active:scale-95 shadow-sm"
           >
             Retry Loading
           </button>
@@ -177,154 +174,216 @@ export function Dashboard() {
   const estimatedMin = Math.ceil(dueCount * 0.5);
 
   return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h1 className="text-[28px] font-medium tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-[14px] mt-1">Your learning overview</p>
+    <div className="p-8 space-y-8 max-w-5xl mx-auto bg-[#f8fafb] animate-in fade-in-50 duration-200 text-[#191c1d] pb-24">
+      {/* Header Panel */}
+      <div className="shrink-0 border-b border-[#c2c7cc]/50 pb-5">
+        <div className="text-[#42474b] font-bold tracking-wider text-[10px] uppercase select-none">
+          Learning Command Center
+        </div>
+        <h1 className="text-[26px] font-extrabold tracking-tight text-[#191c1d] leading-none mt-1">Dashboard</h1>
+        <p className="text-[13.5px] text-[#42474b] font-semibold mt-2">Bring your words, learn smarter.</p>
       </div>
 
-      {/* Hero Learning Card */}
-      <div className="bg-gradient-to-br from-primary to-primary/90 rounded-xl p-8 text-white">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-white/80 text-[13px] uppercase tracking-wide mb-2">Today</div>
-            <div className="text-[48px] font-medium leading-none mb-2">{dueCount}</div>
-            <div className="text-[15px] text-white/90">Words due for review</div>
+      {/* Hero Learning Status Card (Redesigned with soft grey canvas backgrounds) */}
+      <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3 flex-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#002434]/5 border border-[#002434]/15 rounded-full text-[10.5px] font-bold uppercase tracking-wider text-[#002434] select-none">
+              <Clock className="w-3.5 h-3.5 text-[#002434]" strokeWidth={2.5} />
+              <span>Recall Session Ready</span>
+            </div>
+            
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-[48px] font-extrabold tracking-tight leading-none text-[#002434] font-mono select-all">
+                {dueCount}
+              </span>
+              <span className="text-[13px] text-[#42474b] font-bold uppercase tracking-wider">
+                words due for review
+              </span>
+            </div>
+            
+            <p className="text-[13px] text-[#42474b] font-semibold leading-relaxed max-w-md">
+              Maintain your active memory retention rate through daily spaced repetition reviews.
+            </p>
           </div>
-          <div className="text-right">
-            <div className="text-white/80 text-[13px] mb-1">Estimated time</div>
-            <div className="text-[20px] font-medium">{estimatedMin} min</div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4.5">
+            <div className="bg-[#f2f4f5] border border-[#c2c7cc]/60 rounded-2xl px-5 py-3.5 flex flex-col justify-center shadow-sm select-none">
+              <span className="text-[#42474b] text-[10px] font-bold uppercase tracking-wider">Estimated Duration</span>
+              <span className="text-[16px] font-mono font-bold text-[#191c1d] mt-1">{estimatedMin} minutes</span>
+            </div>
+
+            {dueCount > 0 ? (
+              <button
+                onClick={() => navigate('/review/session')}
+                className="h-11 px-6 bg-[#f2f4f5] border border-[#002434]/40 hover:bg-[#eceeef] hover:border-[#002434]/60 text-[#002434] rounded-xl transition-all font-bold text-[13.5px] flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 select-none"
+              >
+                <span>Start Review Session</span>
+                <RotateCcw className="w-4 h-4 text-[#002434]" strokeWidth={2.5} />
+              </button>
+            ) : (
+              <div className="text-emerald-800 text-[13px] font-bold bg-emerald-50 px-4 py-3 rounded-xl border border-emerald-100/50 flex items-center gap-1.5 shadow-sm select-none">
+                ✨ All caught up for today!
+              </div>
+            )}
           </div>
         </div>
-        {dueCount > 0 ? (
-          <button
-            onClick={() => navigate('/review/session')}
-            className="mt-6 h-11 px-6 bg-white text-primary rounded-lg hover:bg-white/95 transition-colors font-medium text-[14px]"
-          >
-            Start Review
-          </button>
-        ) : (
-          <p className="mt-6 text-[14px] text-white/80 italic">No reviews due right now. Nice job!</p>
-        )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Quick Actions (Consistent borders, white surfaces, outline CTAs) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <button
           onClick={() => navigate('/vocabulary/new')}
-          className="bg-card border border-border rounded-lg p-5 hover:border-primary/20 hover:bg-accent/50 transition-all text-left group"
+          className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6 flex flex-col justify-between hover:border-[#002434]/25 transition-all text-left group cursor-pointer shadow-sm hover:shadow-md duration-200"
         >
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
-            <Plus className="w-5 h-5 text-primary" strokeWidth={2} />
+          <div>
+            <div className="w-10 h-10 rounded-xl bg-[#002434]/5 border border-[#002434]/10 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-200 text-[#002434]">
+              <Plus className="w-5 h-5 text-[#002434]" strokeWidth={2.5} />
+            </div>
+            <h3 className="font-extrabold text-[15px] text-[#191c1d] mb-1 group-hover:text-[#002434] transition-colors tracking-tight">Add Single Word</h3>
+            <p className="text-[13px] text-[#42474b] leading-relaxed font-semibold">Save a new word with custom translations and phonetics manually.</p>
           </div>
-          <div className="font-medium text-[14px] mb-1">Add Word</div>
-          <div className="text-[13px] text-muted-foreground">Create new vocabulary entry</div>
         </button>
 
         <button
           onClick={() => navigate('/import')}
-          className="bg-card border border-border rounded-lg p-5 hover:border-primary/20 hover:bg-accent/50 transition-all text-left group"
+          className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6 flex flex-col justify-between hover:border-[#002434]/25 transition-all text-left group cursor-pointer shadow-sm hover:shadow-md duration-200"
         >
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
-            <Upload className="w-5 h-5 text-primary" strokeWidth={2} />
+          <div>
+            <div className="w-10 h-10 rounded-xl bg-[#002434]/5 border border-[#002434]/10 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-200 text-[#002434]">
+              <Upload className="w-4.5 h-4.5 text-[#002434]" strokeWidth={2.5} />
+            </div>
+            <h3 className="font-extrabold text-[15px] text-[#191c1d] mb-1 group-hover:text-[#002434] transition-colors tracking-tight">Import Pipeline</h3>
+            <p className="text-[13px] text-[#42474b] leading-relaxed font-semibold">Paste full text documents, let AI extract candidates, and save them in bulk.</p>
           </div>
-          <div className="font-medium text-[14px] mb-1">Import Text</div>
-          <div className="text-[13px] text-muted-foreground">Extract words from article</div>
         </button>
 
         <button
           onClick={() => navigate('/vocabulary')}
-          className="bg-card border border-border rounded-lg p-5 hover:border-primary/20 hover:bg-accent/50 transition-all text-left group"
+          className="bg-white border border-[#c2c7cc]/60 rounded-3xl p-6 flex flex-col justify-between hover:border-[#002434]/25 transition-all text-left group cursor-pointer shadow-sm hover:shadow-md duration-200"
         >
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
-            <Book className="w-5 h-5 text-primary" strokeWidth={2} />
+          <div>
+            <div className="w-10 h-10 rounded-xl bg-[#002434]/5 border border-[#002434]/10 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-200 text-[#002434]">
+              <Book className="w-4.5 h-4.5 text-[#002434]" strokeWidth={2.5} />
+            </div>
+            <h3 className="font-extrabold text-[15px] text-[#191c1d] mb-1 group-hover:text-[#002434] transition-colors tracking-tight">Vocabulary Library</h3>
+            <p className="text-[13px] text-[#42474b] leading-relaxed font-semibold">Browse, filter, edit, delete, and manage your personal repository library.</p>
           </div>
-          <div className="font-medium text-[14px] mb-1">Browse Vocabulary</div>
-          <div className="text-[13px] text-muted-foreground">View all saved words</div>
         </button>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <Book className="w-4 h-4" strokeWidth={1.5} />
-            <span className="text-[13px]">Total Words</span>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Words */}
+        <div className="bg-white border border-[#c2c7cc]/60 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center gap-2.5 text-[#42474b] mb-3 select-none">
+            <div className="w-7 h-7 rounded-lg bg-[#f2f4f5] flex items-center justify-center border border-[#c2c7cc]/50">
+              <Book className="w-4 h-4 text-slate-500" strokeWidth={1.5} />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Words</span>
           </div>
-          <div className="text-[28px] font-medium">{stats?.total_words || 0}</div>
+          <div className="text-[28px] font-extrabold text-[#002434] font-mono leading-none select-all">
+            {stats?.total_words || 0}
+          </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <FolderOpen className="w-4 h-4" strokeWidth={1.5} />
-            <span className="text-[13px]">Collections</span>
+        {/* Collections */}
+        <div className="bg-white border border-[#c2c7cc]/60 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center gap-2.5 text-[#42474b] mb-3 select-none">
+            <div className="w-7 h-7 rounded-lg bg-[#f2f4f5] flex items-center justify-center border border-[#c2c7cc]/50">
+              <FolderOpen className="w-4 h-4 text-slate-500" strokeWidth={1.5} />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Collections</span>
           </div>
-          <div className="text-[28px] font-medium">{collectionCount}</div>
+          <div className="text-[28px] font-extrabold text-[#002434] font-mono leading-none select-all">
+            {collectionCount}
+          </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <Target className="w-4 h-4" strokeWidth={1.5} />
-            <span className="text-[13px]">Mastered</span>
+        {/* Mastered */}
+        <div className="bg-white border border-[#c2c7cc]/60 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center gap-2.5 text-[#42474b] mb-3 select-none">
+            <div className="w-7 h-7 rounded-lg bg-[#f2f4f5] flex items-center justify-center border border-[#c2c7cc]/50">
+              <Target className="w-4 h-4 text-slate-500" strokeWidth={1.5} />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Mastered</span>
           </div>
-          <div className="text-[28px] font-medium">{stats?.mastered_words || 0}</div>
+          <div className="text-[28px] font-extrabold text-[#002434] font-mono leading-none select-all">
+            {stats?.mastered_words || 0}
+          </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-5">
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <TrendingUp className="w-4 h-4" strokeWidth={1.5} />
-            <span className="text-[13px]">Streak</span>
+        {/* Streak */}
+        <div className="bg-white border border-[#c2c7cc]/60 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center gap-2.5 text-[#42474b] mb-3 select-none">
+            <div className="w-7 h-7 rounded-lg bg-[#f2f4f5] flex items-center justify-center border border-[#c2c7cc]/50">
+              <TrendingUp className="w-4 h-4 text-slate-500" strokeWidth={1.5} />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Streak</span>
           </div>
-          <div className="text-[28px] font-medium">{streak} day{streak !== 1 ? 's' : ''}</div>
+          <div className="text-[28px] font-extrabold text-[#002434] font-mono leading-none select-all">
+            {streak} <span className="text-[13px] font-bold uppercase select-none">days</span>
+          </div>
         </div>
       </div>
 
       {/* Recent Words */}
-      <div className="bg-card border border-border rounded-lg">
-        <div className="px-6 py-4 border-b border-border">
-          <h2 className="font-medium text-[15px]">Recently Added</h2>
+      <div className="bg-white border border-[#c2c7cc]/60 rounded-3xl shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b border-[#c2c7cc]/40 flex items-center justify-between">
+          <h2 className="font-extrabold text-[15.5px] text-[#191c1d] tracking-tight">Recently Discovered Words</h2>
+          <button 
+            onClick={() => navigate('/vocabulary')}
+            className="text-[13px] font-bold text-[#002434] hover:text-[#0a3346] hover:underline transition-colors cursor-pointer select-none"
+          >
+            View Library
+          </button>
         </div>
         
         {recentWords.length > 0 ? (
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-[#c2c7cc]/40">
             {recentWords.map((item) => (
               <button
                 key={item.id}
                 onClick={() => navigate('/vocabulary/' + item.id, { state: item })}
-                className="w-full px-6 py-4 hover:bg-accent transition-colors text-left flex items-center justify-between group"
+                className="w-full px-6 py-4.5 hover:bg-[#f2f4f5]/30 transition-all text-left flex items-center justify-between group cursor-pointer"
               >
-                <div className="flex-1">
-                  <div className="font-medium text-[15px] mb-0.5 group-hover:text-primary transition-colors">{item.word}</div>
-                  <div className="text-[13px] text-muted-foreground">{item.translation}</div>
+                <div className="flex-1 space-y-1 min-w-0 pr-4">
+                  <div className="font-bold text-[15px] text-[#191c1d] group-hover:text-[#002434] transition-colors flex items-center gap-2.5 flex-wrap">
+                    <span className="truncate">{item.word}</span>
+                    {item.ipa && (
+                      <span className="text-[12px] font-mono text-[#002434]/70 bg-[#002434]/5 border border-[#002434]/10 px-1.5 py-0.5 rounded font-bold">
+                        /{item.ipa.replace(/^\/|\/$/g, '')}/
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[13px] text-[#42474b] font-semibold truncate">{item.translation}</div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[12px] text-muted-foreground mb-0.5">{item.language}</div>
-                  <div className="text-[12px] text-muted-foreground">{getRelativeTimeString(item.created_at)}</div>
+                <div className="text-right space-y-1.5 shrink-0 flex flex-col items-end">
+                  <span className="inline-flex items-center rounded-lg bg-[#eceeef] px-2.5 py-0.5 text-[10px] font-bold text-[#42474b] uppercase border border-[#c2c7cc]/50 select-none">
+                    {item.language}
+                  </span>
+                  <div className="text-[11.5px] text-slate-450 font-bold">{getRelativeTimeString(item.created_at)}</div>
                 </div>
               </button>
             ))}
           </div>
         ) : (
-          <div className="p-8 text-center space-y-4">
-            <p className="text-muted-foreground text-[14px]">You haven't added any words yet. Start building your vocabulary!</p>
-            <div className="flex justify-center gap-3">
+          <div className="p-12 text-center space-y-5 bg-[#f8fafb]/20">
+            <p className="text-[#42474b] text-[13.5px] font-semibold leading-relaxed">
+              You haven't added any words yet. Start building your vocabulary repository!
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 select-none">
               <button
                 onClick={() => navigate('/vocabulary/new')}
-                className="h-9 px-4 bg-primary text-white rounded-lg hover:bg-primary/95 transition-colors font-medium text-[13px]"
+                className="h-9 px-4 bg-[#f2f4f5] border border-[#002434]/40 text-[#002434] rounded-xl hover:bg-[#eceeef] hover:border-[#002434]/60 transition-all font-bold text-[12.5px] cursor-pointer active:scale-95 shadow-sm"
               >
                 Add Your First Word
               </button>
               <button
                 onClick={() => navigate('/import')}
-                className="h-9 px-4 bg-secondary text-secondary-foreground border border-border rounded-lg hover:bg-accent transition-colors font-medium text-[13px]"
+                className="h-9 px-4 bg-white border border-[#c2c7cc]/70 text-[#42474b] rounded-xl hover:bg-[#f2f4f5] transition-all font-bold text-[12.5px] cursor-pointer active:scale-95 shadow-sm"
               >
                 Import Text
-              </button>
-              <button
-                onClick={() => navigate('/collections')}
-                className="h-9 px-4 bg-secondary text-secondary-foreground border border-border rounded-lg hover:bg-accent transition-colors font-medium text-[13px]"
-              >
-                Create a Collection
               </button>
             </div>
           </div>
