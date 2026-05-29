@@ -18,26 +18,31 @@ export function Navigation({ isCollapsed, onToggleCollapse }: NavigationProps) {
   ];
 
   return (
-    <nav className={`${isCollapsed ? 'w-16' : 'w-56'} border-r border-border bg-sidebar flex flex-col h-screen fixed left-0 top-0 transition-all duration-300 z-20`}>
+    <nav className={`${isCollapsed ? 'w-16' : 'w-56'} border-r border-sidebar-border bg-sidebar flex flex-col h-screen fixed left-0 top-0 transition-all duration-300 z-20`}>
       {isCollapsed ? (
-        <div className="h-16 flex items-center justify-center border-b border-sidebar-border">
+        <div className="h-16 flex items-center justify-center border-b border-sidebar-border/30">
           <button
             onClick={onToggleCollapse}
-            className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-sidebar-accent transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
             title="Expand Sidebar"
           >
-            <Sparkles className="w-[18px] h-[18px] text-zinc-800 flex-shrink-0" strokeWidth={1.5} />
+            <Sparkles className="w-[18px] h-[18px] text-teal-400 flex-shrink-0 animate-pulse" strokeWidth={1.5} />
           </button>
         </div>
       ) : (
-        <div className="h-16 flex items-center justify-between px-6 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-[18px] h-[18px] text-zinc-800 flex-shrink-0" strokeWidth={1.5} />
-            <span className="font-semibold text-[14px] tracking-wide text-zinc-900">Voca</span>
+        <div className="h-16 flex items-center justify-between px-5 border-b border-sidebar-border/30">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-teal-500/10 flex items-center justify-center border border-teal-500/20">
+              <Sparkles className="w-4 h-4 text-teal-400 flex-shrink-0" strokeWidth={1.5} />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-semibold text-[15px] tracking-wide text-white leading-none">Voca</span>
+              <span className="text-[10px] text-teal-400 font-medium tracking-wider uppercase mt-0.5">Learn Smarter</span>
+            </div>
           </div>
           <button
             onClick={onToggleCollapse}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-sidebar-accent transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
             title="Collapse Sidebar"
           >
             <PanelLeftClose className="w-[18px] h-[18px]" strokeWidth={1.5} />
@@ -45,7 +50,7 @@ export function Navigation({ isCollapsed, onToggleCollapse }: NavigationProps) {
         </div>
       )}
 
-      <div className="flex-1 py-6 flex flex-col gap-1">
+      <div className="flex-1 py-4 flex flex-col gap-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
 
@@ -56,10 +61,10 @@ export function Navigation({ isCollapsed, onToggleCollapse }: NavigationProps) {
               title={isCollapsed ? item.label : undefined}
               end={item.path === '/'}
               className={({ isActive }) => 
-                `w-full flex items-center gap-3 ${isCollapsed ? 'justify-center px-0' : 'px-6'} py-2.5 transition-colors ${
+                `flex items-center gap-3 py-2 ${isCollapsed ? 'justify-center mx-2 px-0' : 'px-3 mx-3'} my-0.5 rounded-lg transition-all text-[14px] ${
                   isActive
-                    ? 'text-sidebar-primary-foreground bg-sidebar-primary'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                    ? 'text-sidebar-primary-foreground bg-sidebar-primary font-medium shadow-md shadow-black/10'
+                    : 'text-sidebar-foreground hover:bg-white/5 hover:text-white'
                 }`
               }
             >
