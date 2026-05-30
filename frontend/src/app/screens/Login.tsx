@@ -125,34 +125,40 @@ export function Login() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
-            <div className="flex flex-col items-start text-left">
-              <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center mb-6 shadow-sm">
+            <div className="flex items-center gap-4 text-left">
+              <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center shadow-sm shrink-0">
                 <BookOpen className="w-4 h-4 text-zinc-800" strokeWidth={1.5} />
               </div>
-              <h3 className="text-base font-semibold text-zinc-950 mb-3 tracking-tight">01 / Contextual Import</h3>
-              <p className="text-zinc-500 font-light text-sm leading-relaxed">
-                Paste any article or excerpt you read. Voca processes the text, highligting vocabulary candidates while keeping the original context sentences. Learning words out of context is futile; we ensure you remember the exact paragraph they came from.
-              </p>
+              <div>
+                <h3 className="text-base font-semibold text-zinc-950 mb-1 tracking-tight">01 / Contextual Import</h3>
+                <p className="text-zinc-500 font-light text-sm leading-relaxed">
+                  Paste any article or excerpt you read. Voca processes the text, highligting vocabulary candidates while keeping the original context sentences. Learning words out of context is futile; we ensure you remember the exact paragraph they came from.
+                </p>
+              </div>
             </div>
             
-            <div className="flex flex-col items-start text-left">
-              <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center mb-6 shadow-sm">
+            <div className="flex items-center gap-4 text-left">
+              <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center shadow-sm shrink-0">
                 <Brain className="w-4 h-4 text-zinc-800" strokeWidth={1.5} />
               </div>
-              <h3 className="text-base font-semibold text-zinc-950 mb-3 tracking-tight">02 / AI Enrichment</h3>
-              <p className="text-zinc-500 font-light text-sm leading-relaxed">
-                Leveraging integrated AI models, the app instantly parses selected terms. It auto-generates phonetic spellings, parts of speech, synonyms, accurate definitions, and original contextual examples. No tedious typing required.
-              </p>
+              <div>
+                <h3 className="text-base font-semibold text-zinc-950 mb-1 tracking-tight">02 / AI Enrichment</h3>
+                <p className="text-zinc-500 font-light text-sm leading-relaxed">
+                  Leveraging integrated AI models, the app instantly parses selected terms. It auto-generates phonetic spellings, parts of speech, synonyms, accurate definitions, and original contextual examples. No tedious typing required.
+                </p>
+              </div>
             </div>
 
-            <div className="flex flex-col items-start text-left">
-              <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center mb-6 shadow-sm">
+            <div className="flex items-center gap-4 text-left">
+              <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center shadow-sm shrink-0">
                 <Zap className="w-4 h-4 text-zinc-800" strokeWidth={1.5} />
               </div>
-              <h3 className="text-base font-semibold text-zinc-950 mb-3 tracking-tight">03 / Active Recall</h3>
-              <p className="text-zinc-500 font-light text-sm leading-relaxed">
-                Retain what you gather. Standard flashcard review sessions, multiple choice exercises, and spelling tests are dynamically scheduled using advanced spaced repetition logic to lock words into your long-term memory perfectly.
-              </p>
+              <div>
+                <h3 className="text-base font-semibold text-zinc-950 mb-1 tracking-tight">03 / Active Recall</h3>
+                <p className="text-zinc-500 font-light text-sm leading-relaxed">
+                  Retain what you gather. Standard flashcard review sessions, multiple choice exercises, and spelling tests are dynamically scheduled using advanced spaced repetition logic to lock words into your long-term memory perfectly.
+                </p>
+              </div>
             </div>
           </div>
         </div>
